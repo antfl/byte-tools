@@ -37,17 +37,11 @@ const themeIcon = computed(() => (props.isDarkTheme ? 'moon' : 'sun'))
         />
       </div>
 
-      <button
-        type="button"
-        class="theme-toggle"
+      <IconButton
+        :icon="themeIcon"
         :title="themeToggleTitle"
-        :aria-label="themeToggleTitle"
         @click="emit('toggleTheme')"
-      >
-        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-          <use :href="`#icon-${themeIcon}`" :xlink:href="`#icon-${themeIcon}`" />
-        </svg>
-      </button>
+      />
     </div>
   </aside>
 </template>
@@ -84,43 +78,9 @@ const themeIcon = computed(() => (props.isDarkTheme ? 'moon' : 'sun'))
 }
 
 .side-toolbar :deep(.icon-button) {
-  width: 28px;
-  height: 28px;
-  border-radius: 10px;
-}
-
-.theme-toggle {
-  width: 30px;
-  height: 30px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 10px;
-  border: none;
-  background: transparent;
-  color: var(--text-primary);
-  cursor: pointer;
-  transition: background-color 0.2s ease, color 0.2s ease;
-}
-
-.theme-toggle svg {
-  width: 18px;
-  height: 18px;
-  stroke: currentColor;
-  stroke-width: 2;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  fill: none;
-}
-
-.theme-toggle:hover {
-  background-color: var(--surface-card);
-  color: var(--color-brand);
-}
-
-.theme-toggle:focus-visible {
-  outline: 2px solid var(--color-brand);
-  outline-offset: 3px;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-base);
 }
 
 @media (max-width: 960px) {

@@ -9,6 +9,8 @@ const props = withDefaults(
       | 'minify'
       | 'repair'
       | 'clear'
+      | 'sun'
+      | 'moon'
     title: string
     variant?: 'ghost' | 'primary'
     active?: boolean
@@ -44,12 +46,12 @@ const handleClick = () => {
 
 <style scoped>
 .icon-button {
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: 10px;
+  border-radius: var(--radius-base);
   border: none;
   background-color: transparent;
   color: var(--text-primary);

@@ -99,7 +99,7 @@ onMounted(() => {
     base: 'vs-dark',
     inherit: true,
     rules: [
-      { token: '', background: '0F172A', foreground: 'E2E8F0' },
+      { token: '', background: '2B2D30', foreground: 'F1F5F9' },
       { token: 'string.key.json', foreground: '60A5FA' },
       { token: 'string.value.json', foreground: 'FBBF24' },
       { token: 'number', foreground: 'F97316' },
@@ -107,21 +107,21 @@ onMounted(() => {
       { token: 'delimiter', foreground: '94A3B8' }
     ],
     colors: {
-      'editor.background': '#0f172a',
-      'editor.foreground': '#e2e8f0',
-      'editorCursor.foreground': '#2b6efa',
-      'editor.lineHighlightBackground': '#1e293b',
-      'editorLineNumber.foreground': '#475569',
-      'editorLineNumber.activeForeground': '#e2e8f0',
-      'editor.selectionBackground': '#1d4ed81f',
-      'editor.inactiveSelectionBackground': '#1e293b40',
-      'editorWidget.background': '#111827',
-      'editorSuggestWidget.background': '#111827',
-      'scrollbarSlider.background': '#33415599',
-      'scrollbarSlider.hoverBackground': '#475569aa',
-      'diffEditor.insertedTextBackground': '#16653433',
-      'diffEditor.removedTextBackground': '#7f1d1d33',
-      'panel.background': '#0f172a'
+      'editor.background': '#2b2d30',
+      'editor.foreground': '#f1f5f9',
+      'editorCursor.foreground': '#5b8def',
+      'editor.lineHighlightBackground': '#35373b',
+      'editorLineNumber.foreground': '#8a9099',
+      'editorLineNumber.activeForeground': '#f1f5f9',
+      'editor.selectionBackground': '#3a3c4240',
+      'editor.inactiveSelectionBackground': '#3a3c4226',
+      'editorWidget.background': '#313338',
+      'editorSuggestWidget.background': '#313338',
+      'scrollbarSlider.background': '#4a4d54aa',
+      'scrollbarSlider.hoverBackground': '#5c6068cc',
+      'diffEditor.insertedTextBackground': '#2f855a33',
+      'diffEditor.removedTextBackground': '#9f123933',
+      'panel.background': '#2b2d30'
     }
   })
 
