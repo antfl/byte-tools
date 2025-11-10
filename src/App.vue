@@ -387,7 +387,7 @@ function handleDiffMount(editor: MonacoEditorNS.IStandaloneDiffEditor) {
 
     <div class="main-layout">
       <aside class="side-toolbar">
-        <div class="toolbar-section">
+        <div class="toolbar-section toolbar-section--mode">
           <IconButton
             icon="format"
             :variant="mode === 'format' ? 'primary' : 'ghost'"
@@ -399,88 +399,8 @@ function handleDiffMount(editor: MonacoEditorNS.IStandaloneDiffEditor) {
             icon="diff"
             :variant="mode === 'diff' ? 'primary' : 'ghost'"
             :active="mode === 'diff'"
-            :title="mode === 'diff' ? '退出对比视图' : '进入对比视图'"
-            @click="mode = mode === 'diff' ? 'format' : 'diff'"
-          />
-        </div>
-        <div class="toolbar-divider" />
-        <div class="toolbar-section">
-          <span class="section-label">源</span>
-          <IconButton
-            icon="import"
-            title="导入源 JSON 文件"
-            :active="activeTool === 'source-import'"
-            @click="triggerImport('source')"
-          />
-          <IconButton
-            icon="export"
-            title="导出源 JSON 内容"
-            :active="activeTool === 'source-export'"
-            @click="handleExport('source')"
-          />
-          <IconButton
-            icon="format"
-            title="格式化源 JSON"
-            :active="activeTool === 'source-format'"
-            @click="handleFormat('source')"
-          />
-          <IconButton
-            icon="minify"
-            title="压缩源 JSON"
-            :active="activeTool === 'source-minify'"
-            @click="handleMinify('source')"
-          />
-          <IconButton
-            icon="repair"
-            title="尝试修复源 JSON"
-            :active="activeTool === 'source-repair'"
-            @click="handleRepair('source')"
-          />
-          <IconButton
-            icon="clear"
-            title="清空源 JSON"
-            :active="activeTool === 'source-clear'"
-            @click="handleClear('source')"
-          />
-        </div>
-        <div class="toolbar-divider" v-show="mode === 'diff'" />
-        <div class="toolbar-section" v-show="mode === 'diff'">
-          <span class="section-label">目标</span>
-          <IconButton
-            icon="import"
-            title="导入目标 JSON 文件"
-            :active="activeTool === 'target-import'"
-            @click="triggerImport('target')"
-          />
-          <IconButton
-            icon="export"
-            title="导出目标 JSON 内容"
-            :active="activeTool === 'target-export'"
-            @click="handleExport('target')"
-          />
-          <IconButton
-            icon="format"
-            title="格式化目标 JSON"
-            :active="activeTool === 'target-format'"
-            @click="handleFormat('target')"
-          />
-          <IconButton
-            icon="minify"
-            title="压缩目标 JSON"
-            :active="activeTool === 'target-minify'"
-            @click="handleMinify('target')"
-          />
-          <IconButton
-            icon="repair"
-            title="尝试修复目标 JSON"
-            :active="activeTool === 'target-repair'"
-            @click="handleRepair('target')"
-          />
-          <IconButton
-            icon="clear"
-            title="清空目标 JSON"
-            :active="activeTool === 'target-clear'"
-            @click="handleClear('target')"
+            title="对比"
+            @click="mode = 'diff'"
           />
         </div>
       </aside>
@@ -490,26 +410,151 @@ function handleDiffMount(editor: MonacoEditorNS.IStandaloneDiffEditor) {
           <div class="editor-pane editor-pane--source text-input-pane">
             <textarea v-model="state.source" placeholder="在此粘贴或输入 JSON 字符串"></textarea>
           </div>
-          <CodeEditor
-            v-model:value="previewContent"
-            :theme="editorTheme"
-            language="json"
-            class="editor-pane editor-pane--target"
-            :options="previewEditorOptions"
-          />
+          <div class="editor-pane editor-pane--target">
+            <div class="pane-header">
+              <div class="pane-actions">
+                <IconButton
+                  icon="import"
+                  title="导入"
+                  :active="activeTool === 'source-import'"
+                  @click="triggerImport('source')"
+                />
+                <IconButton
+                  icon="export"
+                  title="导出"
+                  :active="activeTool === 'source-export'"
+                  @click="handleExport('source')"
+                />
+                <IconButton
+                  icon="format"
+                  title="格式化"
+                  :active="activeTool === 'source-format'"
+                  @click="handleFormat('source')"
+                />
+                <IconButton
+                  icon="minify"
+                  title="压缩"
+                  :active="activeTool === 'source-minify'"
+                  @click="handleMinify('source')"
+                />
+                <IconButton
+                  icon="repair"
+                  title="尝试修复"
+                  :active="activeTool === 'source-repair'"
+                  @click="handleRepair('source')"
+                />
+                <IconButton
+                  icon="clear"
+                  title="清空"
+                  :active="activeTool === 'source-clear'"
+                  @click="handleClear('source')"
+                />
+              </div>
+            </div>
+            <CodeEditor
+              v-model:value="previewContent"
+              :theme="editorTheme"
+              language="json"
+              class="pane-body"
+              :options="previewEditorOptions"
+            />
+          </div>
         </template>
 
-        <DiffEditor
-          v-else-if="mode === 'diff'"
-          :original="state.source"
-          :value="state.target"
-          :theme="editorTheme"
-          language="json"
-          class="editor-pane editor-pane--diff"
-          :options="diffEditorOptions"
-          @editorDidMount="handleDiffMount"
-          @update:value="state.target = $event"
-        />
+        <div v-else-if="mode === 'diff'" class="editor-pane editor-pane--diff">
+          <div class="pane-header pane-header--dual">
+            <div class="pane-group">
+              <div class="pane-actions">
+                <IconButton
+                  icon="import"
+                  title="导入"
+                  :active="activeTool === 'source-import'"
+                  @click="triggerImport('source')"
+                />
+                <IconButton
+                  icon="export"
+                  title="导出"
+                  :active="activeTool === 'source-export'"
+                  @click="handleExport('source')"
+                />
+                <IconButton
+                  icon="format"
+                  title="格式化"
+                  :active="activeTool === 'source-format'"
+                  @click="handleFormat('source')"
+                />
+                <IconButton
+                  icon="minify"
+                  title="压缩"
+                  :active="activeTool === 'source-minify'"
+                  @click="handleMinify('source')"
+                />
+                <IconButton
+                  icon="repair"
+                  title="尝试修复"
+                  :active="activeTool === 'source-repair'"
+                  @click="handleRepair('source')"
+                />
+                <IconButton
+                  icon="clear"
+                  title="清空"
+                  :active="activeTool === 'source-clear'"
+                  @click="handleClear('source')"
+                />
+              </div>
+            </div>
+            <div class="pane-group">
+              <div class="pane-actions">
+                <IconButton
+                  icon="import"
+                  title="导入"
+                  :active="activeTool === 'target-import'"
+                  @click="triggerImport('target')"
+                />
+                <IconButton
+                  icon="export"
+                  title="导出"
+                  :active="activeTool === 'target-export'"
+                  @click="handleExport('target')"
+                />
+                <IconButton
+                  icon="format"
+                  title="格式化"
+                  :active="activeTool === 'target-format'"
+                  @click="handleFormat('target')"
+                />
+                <IconButton
+                  icon="minify"
+                  title="压缩"
+                  :active="activeTool === 'target-minify'"
+                  @click="handleMinify('target')"
+                />
+                <IconButton
+                  icon="repair"
+                  title="尝试修复"
+                  :active="activeTool === 'target-repair'"
+                  @click="handleRepair('target')"
+                />
+                <IconButton
+                  icon="clear"
+                  title="清空"
+                  :active="activeTool === 'target-clear'"
+                  @click="handleClear('target')"
+                />
+              </div>
+            </div>
+          </div>
+          <DiffEditor
+            :original="state.source"
+            :value="state.target"
+            :theme="editorTheme"
+            language="json"
+            class="pane-body diff-body"
+            :options="diffEditorOptions"
+            @editorDidMount="handleDiffMount"
+            @update:value="state.target = $event"
+          />
+        </div>
       </section>
     </div>
 
@@ -638,22 +683,6 @@ function handleDiffMount(editor: MonacoEditorNS.IStandaloneDiffEditor) {
   gap: 8px;
 }
 
-.toolbar-divider {
-  width: 100%;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, var(--border-subtle), transparent);
-}
-
-.section-label {
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--text-muted);
-  writing-mode: vertical-rl;
-  transform: rotate(180deg);
-}
-
 .side-toolbar :deep(.icon-button) {
   width: 28px;
   height: 28px;
@@ -683,15 +712,20 @@ function handleDiffMount(editor: MonacoEditorNS.IStandaloneDiffEditor) {
   min-width: 0;
   min-height: 0;
   height: 100%;
-  border: 1px solid var(--border-strong);
+  display: flex;
+  flex-direction: column;
   background: var(--surface-primary);
-  box-shadow: none;
   border-radius: 0;
-  display: block;
+}
+
+.editor-pane:not(.editor-pane--source) {
+  border: 1px solid var(--border-strong);
+  box-shadow: none;
 }
 
 .text-input-pane {
   position: relative;
+  border: 1px solid var(--border-strong);
 }
 
 .text-input-pane textarea {
@@ -711,6 +745,48 @@ function handleDiffMount(editor: MonacoEditorNS.IStandaloneDiffEditor) {
 
 .text-input-pane textarea::placeholder {
   color: var(--text-muted);
+}
+
+.pane-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: var(--surface-secondary);
+  border-bottom: 1px solid var(--border-subtle);
+  gap: 12px;
+}
+
+.pane-header--dual {
+  gap: 24px;
+}
+
+.pane-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+
+.pane-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pane-body {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+}
+
+.pane-body :deep(.monaco-editor),
+.pane-body :deep(.monaco-editor-vue3) {
+  height: 100%;
+}
+
+.diff-body {
+  border: none;
 }
 
 .status-bar {
