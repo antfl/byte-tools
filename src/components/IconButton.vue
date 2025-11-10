@@ -64,13 +64,15 @@ const handleClick = () => {
 }
 
 .icon-button__icon {
-  width: 20px;
-  height: 20px;
+  width: 24px;
+  height: 24px;
   stroke: currentColor;
   stroke-width: 2;
   stroke-linecap: round;
   stroke-linejoin: round;
   fill: none;
+  transform: scale(1.5);
+  transform-origin: center;
 }
 
 .icon-button--ghost {
