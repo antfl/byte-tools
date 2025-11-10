@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import IconButton from './IconButton.vue'
+import type { IconButtonIcon } from './IconButton.vue'
 import Logo from '../assets/logo.svg'
 import type { PanelKey, ToolAction } from '../types/jsonTools'
 
 type ActionKey = 'import' | 'export' | 'format' | 'minify' | 'repair' | 'clear'
+type ActionIcon = Extract<IconButtonIcon, 'import' | 'export' | 'format' | 'minify' | 'repair' | 'clear'>
 
 const props = defineProps<{
   mode: 'format' | 'diff'
@@ -21,7 +23,7 @@ const emit = defineEmits<{
 
 const ACTION_ITEMS: Array<{
   key: ActionKey
-  icon: string
+  icon: ActionIcon
   title: string
 }> = [
   { key: 'import', icon: 'import', title: '导入' },
@@ -33,11 +35,26 @@ const ACTION_ITEMS: Array<{
 ]
 
 function handleAction(action: ActionKey, panel: PanelKey) {
-  if (action === 'import') {
-    emit('triggerImport', panel)
-    return
+  switch (action) {
+    case 'import':
+      emit('triggerImport', panel)
+      break
+    case 'export':
+      emit('export', panel)
+      break
+    case 'format':
+      emit('format', panel)
+      break
+    case 'minify':
+      emit('minify', panel)
+      break
+    case 'repair':
+      emit('repair', panel)
+      break
+    case 'clear':
+      emit('clear', panel)
+      break
   }
-  emit(action, panel)
 }
 
 function isActive(panel: PanelKey, action: ActionKey) {
@@ -104,8 +121,8 @@ function isActive(panel: PanelKey, action: ActionKey) {
 }
 
 .logo {
-  width: 24px;
-  height: 24px;
+  width: 26px;
+  height: 26px;
 }
 
 .top-bar-actions {

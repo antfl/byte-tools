@@ -355,11 +355,11 @@ function patchModelSetValue(model: monaco.editor.ITextModel | null) {
   }
   const originalSetValue = model.setValue.bind(model)
   flaggedModel[MODEL_PATCH_FLAG] = true
-  model.setValue = ((newValue: string, eol?: monaco.editor.EndOfLineSequence) => {
+  model.setValue = ((newValue: string) => {
     if (model.getValue() === newValue) {
       return
     }
-    originalSetValue(newValue, eol)
+    originalSetValue(newValue)
   }) as typeof model.setValue
 }
 

@@ -2,7 +2,7 @@
 import { DiffEditor } from 'monaco-editor-vue3'
 import type { editor as MonacoEditorNS } from 'monaco-editor'
 
-const props = defineProps<{
+defineProps<{
   source: string
   target: string
   editorTheme: string
@@ -13,6 +13,10 @@ const emit = defineEmits<{
   (e: 'mount', editor: MonacoEditorNS.IStandaloneDiffEditor): void
   (e: 'update:target', value: string): void
 }>()
+
+function handleEditorDidMount(editor: MonacoEditorNS.IStandaloneDiffEditor) {
+  emit('mount', editor)
+}
 </script>
 
 <template>
@@ -24,7 +28,7 @@ const emit = defineEmits<{
       language="json"
       class="pane-body diff-body"
       :options="diffEditorOptions"
-      @editorDidMount="(editor) => emit('mount', editor)"
+      @editorDidMount="handleEditorDidMount"
       @update:value="emit('update:target', $event)"
     />
   </div>

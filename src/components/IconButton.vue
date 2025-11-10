@@ -1,16 +1,20 @@
 <script setup lang="ts">
+type IconButtonIcon =
+  | 'diff'
+  | 'import'
+  | 'export'
+  | 'format'
+  | 'minify'
+  | 'repair'
+  | 'clear'
+  | 'sun'
+  | 'moon'
+
+export type { IconButtonIcon }
+
 const props = withDefaults(
   defineProps<{
-    icon:
-      | 'diff'
-      | 'import'
-      | 'export'
-      | 'format'
-      | 'minify'
-      | 'repair'
-      | 'clear'
-      | 'sun'
-      | 'moon'
+    icon: IconButtonIcon
     title: string
     variant?: 'ghost' | 'primary'
     active?: boolean
@@ -46,8 +50,8 @@ const handleClick = () => {
 
 <style scoped>
 .icon-button {
-  width: 28px;
-  height: 28px;
+  width: var(--icon-button-size);
+  height: var(--icon-button-size);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -60,8 +64,8 @@ const handleClick = () => {
 }
 
 .icon-button__icon {
-  width: 18px;
-  height: 18px;
+  width: 20px;
+  height: 20px;
   stroke: currentColor;
   stroke-width: 2;
   stroke-linecap: round;
@@ -73,10 +77,13 @@ const handleClick = () => {
   color: var(--text-primary);
 }
 
-.icon-button--ghost:hover,
+.icon-button--ghost:hover {
+  background-color: var(--button-hover-bg);
+}
+
 .icon-button--ghost.icon-button--active {
-  background-color: var(--surface-card);
-  color: var(--color-brand);
+  background-color: var(--button-active-bg);
+  color: var(--button-active-color);
 }
 
 .icon-button--primary {
@@ -86,8 +93,8 @@ const handleClick = () => {
 
 .icon-button--primary:hover,
 .icon-button--primary.icon-button--active {
-  background-color: var(--color-brand);
-  color: var(--text-contrast);
+  background-color: var(--button-active-bg);
+  color: var(--button-active-color);
 }
 
 .icon-button:focus-visible {

@@ -12,6 +12,10 @@
   --text-muted: #cbd5f5;
   --text-contrast: #0b1120;
   --radius-base: 5px;
+  --icon-button-size: 26px;
+  --button-hover-bg: rgba(255, 255, 255, 0.06);
+  --button-active-bg: #2563eb;
+  --button-active-color: #ffffff;
   --app-gradient-start: #2b2d30;
   --app-gradient-end: #232427;
   --surface-primary: #2b2d30;
@@ -48,6 +52,9 @@
   --border-subtle: rgba(148, 163, 184, 0.28);
   --border-strong: rgba(148, 163, 184, 0.42);
   --accent-surface: rgba(37, 99, 235, 0.12);
+  --button-hover-bg: rgba(15, 23, 42, 0.08);
+  --button-active-bg: #2563eb;
+  --button-active-color: #ffffff;
   --status-neutral: #94a3b8;
   --status-ok: #16a34a;
   --status-warn: #ea580c;

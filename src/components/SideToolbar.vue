@@ -50,7 +50,7 @@ const themeIcon = computed(() => (props.isDarkTheme ? 'moon' : 'sun'))
 .side-toolbar {
   width: var(--sidebar-width);
   padding: 6px 4px;
-  background: var(--surface-toolbar);
+  background: var(--surface-secondary);
   border-right: 1px solid var(--border-subtle);
   backdrop-filter: blur(10px);
   display: flex;
@@ -75,12 +75,6 @@ const themeIcon = computed(() => (props.isDarkTheme ? 'moon' : 'sun'))
   flex-direction: column;
   align-items: center;
   gap: 6px;
-}
-
-.side-toolbar :deep(.icon-button) {
-  width: 32px;
-  height: 32px;
-  border-radius: var(--radius-base);
 }
 
 @media (max-width: 960px) {

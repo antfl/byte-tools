@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import CodeEditor from 'monaco-editor-vue3'
 
-const props = defineProps<{
+defineProps<{
   source: string
   previewContent: string
   editorTheme: string
