@@ -110,13 +110,11 @@ function isActive(panel: PanelKey, action: ActionKey) {
 
 .top-bar-actions {
   flex: 1;
-  padding: 8px 16px;
-  padding-left: calc(var(--sidebar-width) + 16px);
+  padding: 8px 16px 8px calc(var(--sidebar-width) + 16px);
   display: flex;
   align-items: center;
   gap: 16px;
   flex-wrap: wrap;
-  border-left: 1px solid var(--border-subtle);
 }
 
 .top-bar-actions--diff {

@@ -61,22 +61,18 @@ const dotClass = computed(() => {
   height: 8px;
   border-radius: 8px;
   background-color: var(--status-neutral);
-  box-shadow: var(--status-neutral-shadow);
 }
 
 .dot.ok {
   background-color: var(--status-ok);
-  box-shadow: var(--status-ok-shadow);
 }
 
 .dot.warn {
   background-color: var(--status-warn);
-  box-shadow: var(--status-warn-shadow);
 }
 
 .dot.error {
   background-color: var(--status-error);
-  box-shadow: var(--status-error-shadow);
 }
 
 .loading {
