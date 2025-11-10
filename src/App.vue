@@ -340,10 +340,36 @@ function handleClear(panel: PanelKey) {
   activeTool.value = `${panel}-clear`
 }
 
+const MODEL_PATCH_FLAG = '__byteJsonPatchedSetValue__'
+type PatchedTextModel = monaco.editor.ITextModel & {
+  __byteJsonPatchedSetValue__?: boolean
+}
+
+function patchModelSetValue(model: monaco.editor.ITextModel | null) {
+  if (!model) {
+    return
+  }
+  const flaggedModel = model as PatchedTextModel
+  if (flaggedModel[MODEL_PATCH_FLAG]) {
+    return
+  }
+  const originalSetValue = model.setValue.bind(model)
+  flaggedModel[MODEL_PATCH_FLAG] = true
+  model.setValue = ((newValue: string, eol?: monaco.editor.EndOfLineSequence) => {
+    if (model.getValue() === newValue) {
+      return
+    }
+    originalSetValue(newValue, eol)
+  }) as typeof model.setValue
+}
+
 function handleDiffMount(editor: MonacoEditorNS.IStandaloneDiffEditor) {
   diffInstance.value = editor
   const originalModel = editor.getOriginalEditor().getModel()
   const modifiedModel = editor.getModifiedEditor().getModel()
+
+  patchModelSetValue(originalModel)
+  patchModelSetValue(modifiedModel)
 
   if (originalModel) {
     originalModel.onDidChangeContent(() => {

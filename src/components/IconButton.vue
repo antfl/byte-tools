@@ -42,14 +42,14 @@ const handleClick = () => {
       aria-hidden="true"
       focusable="false"
     >
-      <rect x="5" y="5" width="6" height="14" rx="1.6" />
-      <rect x="13" y="5" width="6" height="14" rx="1.6" />
-      <path d="M9 9h-1.5" />
-      <path d="M9 12h-1.5" />
-      <path d="M9 15h-1.5" />
-      <path d="M16 9h-1.5" />
-      <path d="M16 12h-1.5" />
-      <path d="M16 15h-1.5" />
+      <rect x="4" y="4" width="6" height="16" rx="2" />
+      <rect x="14" y="4" width="6" height="16" rx="2" />
+      <path d="M7 9h2" />
+      <path d="M7 12h2" />
+      <path d="M7 15h2" />
+      <path d="M16 9h2" />
+      <path d="M16 12h2" />
+      <path d="M16 15h2" />
     </svg>
 
     <svg
@@ -58,10 +58,9 @@ const handleClick = () => {
       aria-hidden="true"
       focusable="false"
     >
-      <path d="M12 4v10" />
-      <polyline points="9.5 11.5 12 14 14.5 11.5" />
-      <path d="M5 18h14" />
-      <path d="M7 19.5h10" />
+      <path d="M12 5v9" />
+      <polyline points="8.5 11.5 12 15 15.5 11.5" />
+      <path d="M5 19h14" />
     </svg>
 
     <svg
@@ -70,10 +69,9 @@ const handleClick = () => {
       aria-hidden="true"
       focusable="false"
     >
-      <path d="M12 20V10" />
-      <polyline points="14.5 12.5 12 10 9.5 12.5" />
-      <path d="M5 6h14" />
-      <path d="M7 4.5h10" />
+      <path d="M12 19v-9" />
+      <polyline points="8.5 12.5 12 9 15.5 12.5" />
+      <path d="M5 5h14" />
     </svg>
 
     <svg
@@ -82,12 +80,10 @@ const handleClick = () => {
       aria-hidden="true"
       focusable="false"
     >
-      <path
-        d="M9 5c-2 0-3 1.5-3 3v1c0 1.2-.8 2.1-2 2.5 1.2.4 2 1.3 2 2.5v1c0 1.5 1 3 3 3"
-      />
-      <path
-        d="M15 5c2 0 3 1.5 3 3v1c0 1.2.8 2.1 2 2.5-1.2.4-2 1.3-2 2.5v1c0 1.5-1 3-3 3"
-      />
+      <path d="M8 6H6.5a1.5 1.5 0 0 0-1.5 1.5v2c0 .8-.5 1.5-1.5 1.5 1 0 1.5.7 1.5 1.5v2A1.5 1.5 0 0 0 6.5 16H8" />
+      <path d="M16 6h1.5A1.5 1.5 0 0 1 19 7.5v2c0 .8.5 1.5 1.5 1.5-1 0-1.5.7-1.5 1.5v2a1.5 1.5 0 0 1-1.5 1.5H16" />
+      <line x1="11" y1="6" x2="11" y2="18" />
+      <line x1="13" y1="6" x2="13" y2="18" />
     </svg>
 
     <svg
@@ -96,10 +92,11 @@ const handleClick = () => {
       aria-hidden="true"
       focusable="false"
     >
-      <polyline points="6 7 12 13 18 7" />
-      <polyline points="6 17 12 11 18 17" />
-      <line x1="4.5" y1="19" x2="19.5" y2="19" />
-      <line x1="4.5" y1="5" x2="19.5" y2="5" />
+      <path d="M5 7h14" />
+      <path d="M5 17h14" />
+      <polyline points="9 9 6 12 9 15" />
+      <polyline points="15 9 18 12 15 15" />
+      <line x1="11" y1="12" x2="13" y2="12" />
     </svg>
 
     <svg
@@ -108,10 +105,8 @@ const handleClick = () => {
       aria-hidden="true"
       focusable="false"
     >
-      <path
-        d="M19 4.5a4 4 0 0 1-4.6 4.3l-8.9 8.9 2.8 2.8 8.9-8.9A4 4 0 0 1 21 14"
-      />
-      <path d="M5.5 17.5 3 20l1 .9L6.5 18" />
+      <path d="M20.5 6.5a4.5 4.5 0 0 1-5.6 5.4l-7.7 7.7-2.5-2.5 7.7-7.7A4.5 4.5 0 0 1 8.8 6" />
+      <path d="M4.2 18.8 3 20" />
     </svg>
 
     <svg
@@ -121,10 +116,10 @@ const handleClick = () => {
       focusable="false"
     >
       <path d="M9 5h6" />
-      <path d="M5 7h14" />
-      <path d="M8 7v11a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V7" />
-      <line x1="10" y1="10" x2="10" y2="16" />
-      <line x1="14" y1="10" x2="14" y2="16" />
+      <path d="M5 8h14" />
+      <path d="M8 8v9a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V8" />
+      <line x1="11" y1="11" x2="11" y2="17" />
+      <line x1="13" y1="11" x2="13" y2="17" />
     </svg>
   </button>
 </template>
@@ -137,53 +132,53 @@ const handleClick = () => {
   align-items: center;
   justify-content: center;
   border-radius: 10px;
-  border: 1px solid var(--border-button);
-  background: var(--surface-card);
+  border: none;
+  background: transparent;
   color: var(--text-primary);
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: var(--shadow-strong);
+  box-shadow: none;
 }
 
 .icon-button svg {
   width: 18px;
   height: 18px;
   stroke: currentColor;
-  stroke-width: 1.6;
+  stroke-width: 2;
   stroke-linecap: round;
   stroke-linejoin: round;
   fill: none;
 }
 
+.icon-button--ghost {
+  color: var(--text-primary);
+}
+
 .icon-button--ghost:hover {
-  border-color: var(--color-brand);
+  background: var(--surface-card);
   color: var(--color-brand);
   box-shadow: var(--shadow-accent-soft);
 }
 
 .icon-button--ghost.icon-button--active {
+  background: var(--surface-card);
   color: var(--color-brand);
-  border-color: var(--color-brand);
   box-shadow: var(--shadow-accent-medium);
 }
 
 .icon-button--primary {
-  background: linear-gradient(135deg, var(--color-brand-secondary), var(--color-brand));
-  border: none;
-  color: var(--text-contrast);
-}
-
-.icon-button--primary svg {
-  stroke-width: 1.8;
+  color: var(--color-brand);
 }
 
 .icon-button--primary:hover {
-  filter: brightness(1.05);
+  background: linear-gradient(135deg, var(--color-brand-secondary), var(--color-brand));
+  color: var(--text-contrast);
   box-shadow: var(--shadow-accent-medium);
 }
 
 .icon-button--primary.icon-button--active {
-  filter: brightness(1.08);
+  background: linear-gradient(135deg, var(--color-brand-secondary), var(--color-brand));
+  color: var(--text-contrast);
   box-shadow: var(--shadow-accent-strong);
 }
 

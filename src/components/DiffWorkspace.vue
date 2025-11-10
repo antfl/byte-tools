@@ -39,7 +39,6 @@ const emit = defineEmits<{
   flex-direction: column;
   background: var(--surface-primary);
   border-radius: 0;
-  border: 1px solid var(--border-strong);
   box-shadow: none;
 }
 

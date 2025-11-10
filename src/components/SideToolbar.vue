@@ -44,20 +44,18 @@ const isFormatMode = computed(() => props.mode === 'format')
         @click="emit('toggleTheme')"
       >
         <svg v-if="isDarkTheme" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-          <path
-            d="M20 15.5A8 8 0 1 1 12.5 4c-.33.75-.5 1.57-.5 2.41A6.09 6.09 0 0 0 18.09 12c.84 0 1.66-.17 2.41-.5z"
-          />
+          <path d="M15.2 5a7 7 0 1 0 4 12.8A6 6 0 0 1 15.2 5Z" />
         </svg>
         <svg v-else viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-          <circle cx="12" cy="12" r="4.5" />
-          <line x1="12" y1="2.5" x2="12" y2="5" />
-          <line x1="12" y1="19" x2="12" y2="21.5" />
-          <line x1="4.5" y1="12" x2="7" y2="12" />
-          <line x1="17" y1="12" x2="19.5" y2="12" />
-          <line x1="5.8" y1="5.8" x2="7.6" y2="7.6" />
-          <line x1="16.4" y1="16.4" x2="18.2" y2="18.2" />
-          <line x1="5.8" y1="18.2" x2="7.6" y2="16.4" />
-          <line x1="16.4" y1="7.6" x2="18.2" y2="5.8" />
+          <circle cx="12" cy="12" r="4" />
+          <line x1="12" y1="3" x2="12" y2="5.5" />
+          <line x1="12" y1="18.5" x2="12" y2="21" />
+          <line x1="3" y1="12" x2="5.5" y2="12" />
+          <line x1="18.5" y1="12" x2="21" y2="12" />
+          <line x1="5.4" y1="5.4" x2="7.2" y2="7.2" />
+          <line x1="16.8" y1="16.8" x2="18.6" y2="18.6" />
+          <line x1="5.4" y1="18.6" x2="7.2" y2="16.8" />
+          <line x1="16.8" y1="7.2" x2="18.6" y2="5.4" />
         </svg>
       </button>
     </div>
@@ -121,7 +119,7 @@ const isFormatMode = computed(() => props.mode === 'format')
   width: 18px;
   height: 18px;
   stroke: currentColor;
-  stroke-width: 1.6;
+  stroke-width: 2;
   stroke-linecap: round;
   stroke-linejoin: round;
   fill: none;

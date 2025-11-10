@@ -44,13 +44,12 @@ const emit = defineEmits<{
 }
 
 .editor-pane:not(.editor-pane--source) {
-  border: 1px solid var(--border-strong);
   box-shadow: none;
 }
 
 .text-input-pane {
   position: relative;
-  border: 1px solid var(--border-strong);
+  border-right: 1px solid var(--border-strong);
 }
 
 .text-input-pane textarea {
@@ -61,7 +60,7 @@ const emit = defineEmits<{
   resize: none;
   background: transparent;
   color: var(--text-primary);
-  font-family: '"Cascadia Code", "Fira Code", "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, Courier New, monospace';
+  font-family: '"Cascadia Code", "Fira Code", "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, Courier New, monospace',serif;
   font-size: 14px;
   line-height: 22px;
   padding: 16px;
