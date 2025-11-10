@@ -5,8 +5,8 @@
       <stop offset="1" stop-color="#2566F8" />
     </linearGradient>
   </defs>
-  <rect width="48" height="48" rx="12" fill="url(#logoGradient)" />
-  <rect x="12.5" y="11" width="10.5" height="26" rx="4" fill="#FFFFFF" />
-  <rect x="27.5" y="11" width="10.5" height="10.5" rx="4" fill="#FFFFFF" />
-  <rect x="27.5" y="25" width="10.5" height="12" rx="4" fill="#FFFFFF" />
+  <rect width="48" height="48" rx="8" fill="url(#logoGradient)" />
+  <rect x="12.5" y="11" width="10.5" height="26" rx="2" fill="#FFFFFF" />
+  <rect x="27.5" y="11" width="10.5" height="10.5" rx="2" fill="#FFFFFF" />
+  <rect x="27.5" y="25" width="10.5" height="12" rx="2" fill="#FFFFFF" />
 </svg>
