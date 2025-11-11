@@ -11,6 +11,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: 'update:mode', mode: 'format' | 'diff'): void
   (e: 'toggleTheme'): void
+  (e: 'openCacheManager'): void
 }>()
 
 const isFormatMode = computed(() => props.mode === 'format')
@@ -33,7 +34,14 @@ const themeIcon = computed(() => (props.isDarkTheme ? 'moon' : 'sun'))
           title="对比"
           @click="emit('update:mode', 'diff')"
         />
+        <IconButton
+            icon="storage"
+            title="缓存管理"
+            @click="emit('openCacheManager')"
+        />
       </div>
+
+
 
       <IconButton
         :icon="themeIcon"

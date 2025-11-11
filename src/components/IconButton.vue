@@ -8,6 +8,7 @@ type IconButtonIcon =
   | 'repair'
   | 'clear'
   | 'save'
+  | 'storage'
   | 'sun'
   | 'moon'
 
@@ -22,6 +23,7 @@ import minifyIcon from '../assets/icons/minify.svg?raw'
 import moonIcon from '../assets/icons/moon.svg?raw'
 import repairIcon from '../assets/icons/repair.svg?raw'
 import saveIcon from '../assets/icons/save.svg?raw'
+import storageIcon from '../assets/icons/storage.svg?raw'
 import sunIcon from '../assets/icons/sun.svg?raw'
 
 const props = withDefaults(
@@ -49,6 +51,7 @@ const ICON_MAP: Record<IconButtonIcon, string> = {
   moon: moonIcon,
   repair: repairIcon,
   save: saveIcon,
+  storage: storageIcon,
   sun: sunIcon
 }
 

@@ -71,7 +71,8 @@ const cachePicker = reactive({
   visible: false,
   panel: 'source' as PanelKey,
   loading: false,
-  items: [] as StoredSnippet[]
+  items: [] as StoredSnippet[],
+  selectedId: null as string | null
 })
 
 const baseEditorOptions = createDefaultOptions('json')
@@ -127,6 +128,9 @@ async function refreshCacheItems(showError = true) {
   let success = true
   try {
     cachePicker.items = await listSnippets()
+    if (!cachePicker.items.some((item) => item.id === cachePicker.selectedId)) {
+      cachePicker.selectedId = null
+    }
   } catch (error) {
     success = false
     if (showError) {
@@ -407,7 +411,18 @@ function startFileImport(panel: PanelKey) {
 async function openCachePicker(panel: PanelKey) {
   cachePicker.panel = panel
   cachePicker.visible = true
+  cachePicker.selectedId = null
   importOptions.visible = false
+  const success = await refreshCacheItems()
+  if (!success) {
+    cachePicker.visible = false
+  }
+}
+
+async function handleOpenCacheManager() {
+  importOptions.visible = false
+  cachePicker.visible = true
+  cachePicker.selectedId = null
   const success = await refreshCacheItems()
   if (!success) {
     cachePicker.visible = false
@@ -419,6 +434,7 @@ function handleCloseCachePicker() {
     return
   }
   cachePicker.visible = false
+  cachePicker.selectedId = null
 }
 
 async function handleSelectCacheSnippet(id: string) {
@@ -433,6 +449,7 @@ async function handleSelectCacheSnippet(id: string) {
     activeTool.value = `${cachePicker.panel}-import`
     showMessage('success', `已从缓存加载：${snippet.title}`)
     cachePicker.visible = false
+    cachePicker.selectedId = null
   } catch (error) {
     const message = error instanceof Error ? error.message : '读取缓存失败'
     showMessage('error', message)
@@ -443,12 +460,67 @@ async function handleDeleteCacheSnippet(id: string) {
   try {
     await deleteSnippet(id)
     cachePicker.items = cachePicker.items.filter((item) => item.id !== id)
+    if (cachePicker.selectedId === id) {
+      cachePicker.selectedId = null
+    }
     showMessage('success', '缓存已删除')
     if (!cachePicker.items.length) {
       await refreshCacheItems(false)
     }
   } catch (error) {
     const message = error instanceof Error ? error.message : '删除缓存失败'
+    showMessage('error', message)
+  }
+}
+
+function handlePreviewCacheSnippet(id: string | null) {
+  cachePicker.selectedId = id
+}
+
+async function copyToClipboard(text: string) {
+  if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+    await navigator.clipboard.writeText(text)
+    return
+  }
+
+  await new Promise<void>((resolve, reject) => {
+    try {
+      const textarea = document.createElement('textarea')
+      textarea.value = text
+      textarea.setAttribute('readonly', 'true')
+      textarea.style.position = 'fixed'
+      textarea.style.opacity = '0'
+      document.body.appendChild(textarea)
+      textarea.focus()
+      textarea.select()
+      textarea.setSelectionRange(0, textarea.value.length)
+      const successful = document.execCommand('copy')
+      document.body.removeChild(textarea)
+      if (!successful) {
+        reject(new Error('浏览器不允许访问剪贴板'))
+        return
+      }
+      resolve()
+    } catch (error) {
+      reject(error instanceof Error ? error : new Error('复制失败'))
+    }
+  })
+}
+
+async function handleCopyCacheSnippet(id: string) {
+  const snippet = cachePicker.items.find((item) => item.id === id)
+  if (!snippet) {
+    showMessage('error', '未找到对应的缓存记录')
+    await refreshCacheItems()
+    return
+  }
+
+  try {
+    await copyToClipboard(snippet.content)
+    showMessage('success', '内容已复制到剪贴板')
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : '复制失败，请检查浏览器权限'
     showMessage('error', message)
   }
 }
@@ -567,6 +639,7 @@ function handleDiffMount(editor: MonacoEditorNS.IStandaloneDiffEditor) {
         :is-dark-theme="isDarkTheme"
         @update:mode="mode = $event"
         @toggleTheme="toggleTheme"
+        @open-cache-manager="handleOpenCacheManager"
       />
 
       <section class="workspace" :class="{ 'is-diff': mode === 'diff' }">
@@ -638,9 +711,12 @@ function handleDiffMount(editor: MonacoEditorNS.IStandaloneDiffEditor) {
       :panel="cachePicker.panel"
       :loading="cachePicker.loading"
       :items="cachePicker.items"
+      :selected-id="cachePicker.selectedId"
       @close="handleCloseCachePicker"
       @select="handleSelectCacheSnippet"
       @delete="handleDeleteCacheSnippet"
+      @copy="handleCopyCacheSnippet"
+      @preview="handlePreviewCacheSnippet"
       @refresh="refreshCacheItems()"
     />
   </div>

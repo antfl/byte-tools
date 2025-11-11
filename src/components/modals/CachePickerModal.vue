@@ -9,6 +9,7 @@ const props = defineProps<{
   panel: PanelKey
   items: StoredSnippet[]
   loading: boolean
+  selectedId: string | null
 }>()
 
 const emit = defineEmits<{
@@ -16,9 +17,12 @@ const emit = defineEmits<{
   (e: 'select', id: string): void
   (e: 'delete', id: string): void
   (e: 'refresh'): void
+  (e: 'copy', id: string): void
+  (e: 'preview', id: string | null): void
 }>()
 
 const panelLabel = computed(() => (props.panel === 'source' ? '源面板' : '目标面板'))
+const selectedSnippet = computed(() => props.items.find((item) => item.id === props.selectedId))
 
 function handleKeydown(event: KeyboardEvent) {
   if (event.key === 'Escape') {
@@ -71,7 +75,12 @@ function handleKeydown(event: KeyboardEvent) {
           </div>
 
           <ul v-else class="snippet-list">
-            <li v-for="snippet in items" :key="snippet.id" class="snippet-item">
+            <li
+              v-for="snippet in items"
+              :key="snippet.id"
+              class="snippet-item"
+              :data-expanded="props.selectedId === snippet.id"
+            >
               <div class="snippet-item__main">
                 <h3>{{ snippet.title }}</h3>
                 <p>{{ formatDateTime(snippet.updatedAt) }} · {{ formatByteSize(snippet.size) }}</p>
@@ -80,6 +89,12 @@ function handleKeydown(event: KeyboardEvent) {
                 <span class="tag" :data-active="snippet.panel === panel">来自 {{ snippet.panel === 'source' ? '源面板' : '目标面板' }}</span>
               </div>
               <div class="snippet-item__actions">
+                <button type="button" class="btn btn--ghost" @click="emit('preview', props.selectedId === snippet.id ? null : snippet.id)">
+                  {{ props.selectedId === snippet.id ? '收起' : '查看' }}
+                </button>
+                <button type="button" class="btn btn--ghost" @click="emit('copy', snippet.id)">
+                  复制
+                </button>
                 <button type="button" class="btn btn--primary" @click="emit('select', snippet.id)">
                   导入
                 </button>
@@ -87,8 +102,16 @@ function handleKeydown(event: KeyboardEvent) {
                   删除
                 </button>
               </div>
+              <div v-if="props.selectedId === snippet.id" class="snippet-item__preview">
+                <pre>{{ snippet.content }}</pre>
+              </div>
             </li>
           </ul>
+          <div v-if="selectedSnippet" class="preview-hint">
+            <p>
+              共 {{ formatByteSize(selectedSnippet.size) }} · 最近更新于 {{ formatDateTime(selectedSnippet.updatedAt) }}
+            </p>
+          </div>
         </section>
       </div>
     </div>
@@ -244,6 +267,26 @@ function handleKeydown(event: KeyboardEvent) {
   gap: 10px;
 }
 
+.snippet-item__preview {
+  grid-column: 1 / -1;
+  background: rgba(148, 163, 184, 0.12);
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 12px;
+  padding: 14px 16px;
+  max-height: 220px;
+  overflow: auto;
+  font-family: var(--font-code);
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-primary);
+
+  pre {
+    margin: 0;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+}
+
 .tag {
   display: inline-flex;
   align-items: center;
@@ -277,6 +320,7 @@ function handleKeydown(event: KeyboardEvent) {
 
   &--ghost {
     background: transparent;
+    color: var(--text-muted);
     border-color: var(--border-subtle);
 
     &:hover:not(:disabled) {
@@ -306,6 +350,16 @@ function handleKeydown(event: KeyboardEvent) {
   }
 }
 
+.preview-hint {
+  margin-top: 18px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  background: rgba(148, 163, 184, 0.12);
+  border: 1px solid rgba(148, 163, 184, 0.1);
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
 @keyframes spin {
   to {
     transform: rotate(360deg);
@@ -324,6 +378,10 @@ function handleKeydown(event: KeyboardEvent) {
   .snippet-item {
     grid-template-columns: 1fr;
     align-items: flex-start;
+
+    &[data-expanded='true'] {
+      border-color: rgba(77, 107, 255, 0.6);
+    }
   }
 
   .snippet-item__actions {
