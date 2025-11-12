@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import type { PanelKey } from '../../types/jsonTools'
+import type { PanelKey } from '@/types/jsonTools.ts'
 
 const props = defineProps<{
   visible: boolean

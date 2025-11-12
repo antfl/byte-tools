@@ -144,7 +144,7 @@ onUnmounted(() => {
   </div>
 </template>
 
-<style scoped>
+<style scoped lang="less">
 .editor-pane {
   min-width: 0;
   min-height: 0;

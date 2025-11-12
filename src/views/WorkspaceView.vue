@@ -5,7 +5,6 @@ import type { editor as MonacoEditorNS } from 'monaco-editor'
 import * as monaco from 'monaco-editor'
 import { jsonrepair } from 'jsonrepair'
 import { create as createDiffer } from 'jsondiffpatch'
-import { useRouter } from 'vue-router'
 import TopBar from '../components/TopBar.vue'
 import SideToolbar from '../components/SideToolbar.vue'
 import FormatWorkspace from '../components/FormatWorkspace.vue'
@@ -21,7 +20,6 @@ import { useTheme } from '../composables/useTheme'
 import { parseJsonError } from '../utils/format'
 
 const { theme, themeToggleTitle, isDarkTheme, toggleTheme } = useTheme()
-const router = useRouter()
 
 const editorTheme = computed(() => `byte-json-${theme.value}`)
 const differ = createDiffer({
@@ -687,7 +685,7 @@ function handleDiffMount(editor: MonacoEditorNS.IStandaloneDiffEditor) {
 }
 
 function handleOpenAbout() {
-  router.push({ name: 'about' })
+  window.open('/product', '_blank')
 }
 </script>
 

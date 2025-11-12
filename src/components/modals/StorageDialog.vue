@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, nextTick, ref, watch } from 'vue'
-import type { PanelKey } from '../../types/jsonTools'
-import { formatByteSize } from '../../utils/format'
+import type { PanelKey } from '@/types/jsonTools.ts'
+import { formatByteSize } from '@/utils/format.ts'
 
 const props = defineProps<{
   visible: boolean

@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import type { PanelKey } from '../../types/jsonTools'
-import type { StoredSnippet } from '../../services/storageStore'
-import { formatByteSize, formatDateTime } from '../../utils/format'
+import type { PanelKey } from '@/types/jsonTools.ts'
+import type { StoredSnippet } from '@/services/storageStore.ts'
+import { formatByteSize, formatDateTime } from '@/utils/format.ts'
 
 const props = defineProps<{
   visible: boolean
