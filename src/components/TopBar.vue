@@ -10,6 +10,7 @@ type ActionIcon = Extract<IconButtonIcon, 'import' | 'save' | 'export' | 'format
 const props = defineProps<{
   mode: 'format' | 'diff'
   activeTool: ToolAction | null
+  autoFormat?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -20,6 +21,7 @@ const emit = defineEmits<{
   (e: 'minify', panel: PanelKey): void
   (e: 'repair', panel: PanelKey): void
   (e: 'clear', panel: PanelKey): void
+  (e: 'toggleAutoFormat'): void
 }>()
 
 const ACTION_ITEMS: Array<{
@@ -27,8 +29,8 @@ const ACTION_ITEMS: Array<{
   icon: ActionIcon
   title: string
 }> = [
-  { key: 'import', icon: 'import', title: '导入' },
   { key: 'save', icon: 'save', title: '存储到缓存' },
+  { key: 'import', icon: 'import', title: '导入' },
   { key: 'export', icon: 'export', title: '导出' },
   { key: 'format', icon: 'format', title: '格式化' },
   { key: 'minify', icon: 'minify', title: '压缩' },
@@ -76,6 +78,13 @@ function isActive(panel: PanelKey, action: ActionKey) {
 
     <div v-if="mode === 'format'" class="top-bar-actions">
       <div class="actions-row">
+        <IconButton
+          icon="auto"
+          :title="autoFormat ? '自动格式化已启用（点击关闭）' : '自动格式化已禁用（点击启用）'"
+          :active="autoFormat"
+          @click="emit('toggleAutoFormat')"
+        />
+        <div class="actions-divider"></div>
         <IconButton
           v-for="action in ACTION_ITEMS"
           :key="action.key"
@@ -156,6 +165,13 @@ function isActive(panel: PanelKey, action: ActionKey) {
   display: flex;
   align-items: center;
   gap: 18px;
+}
+
+.actions-divider {
+  width: 1px;
+  height: 20px;
+  background-color: var(--border-subtle);
+  margin: 0 4px;
 }
 
 @media (max-width: 960px) {

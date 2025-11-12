@@ -12,9 +12,11 @@ type IconButtonIcon =
   | 'sun'
   | 'moon'
   | 'info'
+  | 'auto'
 
 export type { IconButtonIcon }
 
+import autoIcon from '../assets/icons/auto.svg?raw'
 import clearIcon from '../assets/icons/clear.svg?raw'
 import diffIcon from '../assets/icons/diff.svg?raw'
 import exportIcon from '../assets/icons/export.svg?raw'
@@ -44,6 +46,7 @@ const emit = defineEmits<{
 }>()
 
 const ICON_MAP: Record<IconButtonIcon, string> = {
+  auto: autoIcon,
   clear: clearIcon,
   diff: diffIcon,
   export: exportIcon,

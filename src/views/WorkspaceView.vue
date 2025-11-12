@@ -43,6 +43,7 @@ const activeTool = ref<ToolAction | null>(null)
 const busyPanel = ref<PanelKey | null>(null)
 const message = ref<{ level: MessageLevel; text: string } | null>(null)
 const diffInstance = ref<MonacoEditorNS.IStandaloneDiffEditor | null>(null)
+const autoFormat = ref(false)
 let messageTimer: number | null = null
 
 const sourceInput = ref<HTMLInputElement | null>(null)
@@ -79,8 +80,8 @@ Object.assign(baseEditorOptions, {
   automaticLayout: true,
   minimap: { enabled: false },
   scrollBeyondLastLine: false,
-  formatOnPaste: true,
-  formatOnType: true,
+  formatOnPaste: false,
+  formatOnType: false,
   renderLineHighlight: 'all',
   fontFamily:
     '"Cascadia Code", "Fira Code", "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, Courier New, monospace',
@@ -96,7 +97,9 @@ Object.assign(baseEditorOptions, {
 
 const sourceEditorOptions = computed(() => ({
   ...baseEditorOptions,
-  readOnly: false
+  readOnly: false,
+  formatOnPaste: autoFormat.value,
+  formatOnType: autoFormat.value
 }))
 
 const previewEditorOptions = computed(() => ({
@@ -687,6 +690,17 @@ function handleDiffMount(editor: MonacoEditorNS.IStandaloneDiffEditor) {
 function handleOpenAbout() {
   window.open('/product', '_blank')
 }
+
+function handleToggleAutoFormat() {
+  autoFormat.value = !autoFormat.value
+  if (sourceEditorInstance.value) {
+    sourceEditorInstance.value.updateOptions({
+      formatOnPaste: autoFormat.value,
+      formatOnType: autoFormat.value
+    })
+  }
+  showMessage('success', autoFormat.value ? '已启用自动格式化' : '已禁用自动格式化')
+}
 </script>
 
 <template>
@@ -694,6 +708,7 @@ function handleOpenAbout() {
     <TopBar
       :mode="mode"
       :active-tool="activeTool"
+      :auto-format="autoFormat"
       @trigger-import="triggerImport"
       @save="handleSave"
       @export="handleExport"
@@ -701,6 +716,7 @@ function handleOpenAbout() {
       @minify="handleMinify"
       @repair="handleRepair"
       @clear="handleClear"
+      @toggle-auto-format="handleToggleAutoFormat"
     />
 
     <div class="main-layout">
