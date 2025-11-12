@@ -85,7 +85,11 @@ Object.assign(baseEditorOptions, {
   fontSize: 14,
   lineHeight: 22,
   wordWrap: 'on',
-  padding: { top: 16, bottom: 16 }
+  padding: { top: 16, bottom: 16 },
+  folding: true,
+  foldingStrategy: 'indentation',
+  showFoldingControls: 'always',
+  unfoldOnClickAfterEndOfLine: true
 })
 
 const previewEditorOptions = computed(() => ({
