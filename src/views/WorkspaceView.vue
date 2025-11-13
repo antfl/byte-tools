@@ -268,6 +268,16 @@ watch(
     if (currentMode === 'diff') {
       return
     }
+    
+    // 检查是否为空或只有空白字符
+    const trimmedSource = source.trim()
+    if (!trimmedSource) {
+      previewContent.value = `// 请输入 JSON 字符串`
+      previewIsValid.value = false
+      errorPosition.value = null
+      return
+    }
+    
     try {
       const parsed = JSON.parse(source)
       previewContent.value = JSON.stringify(parsed, null, 2)

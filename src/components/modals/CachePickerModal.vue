@@ -82,11 +82,13 @@ function handleKeydown(event: KeyboardEvent) {
               :data-expanded="props.selectedId === snippet.id"
             >
               <div class="snippet-item__main">
-                <h3>{{ snippet.title }}</h3>
-                <p>{{ formatDateTime(snippet.updatedAt) }} · {{ formatByteSize(snippet.size) }}</p>
-              </div>
-              <div class="snippet-item__meta">
-                <span class="tag" :data-active="snippet.panel === panel">来自 {{ snippet.panel === 'source' ? '源面板' : '目标面板' }}</span>
+                <div>
+                  <h3>{{ snippet.title }}</h3>
+                  <p>{{ formatDateTime(snippet.updatedAt) }} · {{ formatByteSize(snippet.size) }}</p>
+                </div>
+                <div class="snippet-item__meta">
+                  <span class="tag" :data-active="snippet.panel === panel">来自 {{ snippet.panel === 'source' ? '源面板' : '目标面板' }}</span>
+                </div>
               </div>
               <div class="snippet-item__actions">
                 <button type="button" class="btn btn--ghost" @click="emit('preview', props.selectedId === snippet.id ? null : snippet.id)">
@@ -224,98 +226,226 @@ function handleKeydown(event: KeyboardEvent) {
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
 }
 
 .snippet-item {
-  display: grid;
-  grid-template-columns: 1fr auto auto;
-  gap: 16px;
-  align-items: center;
-  padding: 18px 22px;
-  border-radius: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: 0;
+  border-radius: 16px;
   background: var(--surface-secondary);
-  border: 1px solid rgba(148, 163, 184, 0.18);
-  transition: border 0.2s ease, transform 0.2s ease;
+  border: 1.5px solid var(--border-subtle);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+  position: relative;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--color-brand), rgba(77, 107, 255, 0.4));
+    opacity: 0;
+    transition: opacity 0.25s ease;
+  }
 
   &:hover {
-    border-color: rgba(77, 107, 255, 0.6);
-    transform: translateY(-2px);
+    border-color: var(--color-brand);
+    box-shadow: 0 4px 16px rgba(77, 107, 255, 0.15);
+    transform: translateY(-1px);
+
+    &::before {
+      opacity: 1;
+    }
+  }
+
+  &[data-expanded='true'] {
+    border-color: var(--color-brand);
+    box-shadow: 0 6px 24px rgba(77, 107, 255, 0.2);
+
+    &::before {
+      opacity: 1;
+    }
+
+    .snippet-item__main {
+      background: rgba(77, 107, 255, 0.05);
+    }
+  }
+}
+
+.snippet-item__main {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 20px 24px;
+  transition: background 0.2s ease;
+
+  > div:first-child {
+    flex: 1;
+    min-width: 0;
   }
 
   h3 {
-    margin: 0 0 6px;
+    margin: 0 0 8px;
     font-size: 16px;
+    font-weight: 600;
     color: var(--text-primary);
+    line-height: 1.4;
+    word-break: break-word;
   }
 
   p {
     margin: 0;
     font-size: 13px;
     color: var(--text-muted);
+    line-height: 1.5;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+
+    &::before {
+      content: '•';
+      opacity: 0.5;
+    }
   }
 }
 
 .snippet-item__meta {
   display: flex;
-  justify-content: flex-end;
+  align-items: center;
   gap: 8px;
+  flex-shrink: 0;
+  margin-top: 2px;
 }
 
 .snippet-item__actions {
   display: flex;
-  gap: 10px;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 24px;
+  border-top: 1px solid var(--border-subtle);
+  background: rgba(148, 163, 184, 0.03);
+  flex-wrap: wrap;
 }
 
 .snippet-item__preview {
-  grid-column: 1 / -1;
-  background: rgba(148, 163, 184, 0.12);
-  border: 1px solid rgba(148, 163, 184, 0.18);
+  margin: 0 24px 20px;
+  background: var(--surface-primary);
+  border: 1px solid var(--border-subtle);
   border-radius: 12px;
-  padding: 14px 16px;
-  max-height: 220px;
+  padding: 16px 18px;
+  max-height: 240px;
   overflow: auto;
   font-family: var(--font-code);
-  font-size: 13px;
-  line-height: 1.5;
+  font-size: 12.5px;
+  line-height: 1.6;
   color: var(--text-primary);
+  position: relative;
+  animation: slideDown 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+
+  &::before {
+    content: '';
+    position: sticky;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 20px;
+    background: linear-gradient(to bottom, var(--surface-primary), transparent);
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  &::after {
+    content: '';
+    position: sticky;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 20px;
+    background: linear-gradient(to top, var(--surface-primary), transparent);
+    pointer-events: none;
+    z-index: 1;
+  }
 
   pre {
     margin: 0;
     white-space: pre-wrap;
     word-break: break-word;
+    position: relative;
+    z-index: 0;
+  }
+
+  /* 自定义滚动条样式 */
+  &::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 4px;
+
+    &:hover {
+      background: var(--border-strong);
+    }
+  }
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
 .tag {
   display: inline-flex;
   align-items: center;
-  padding: 6px 10px;
-  border-radius: 999px;
-  font-size: 12px;
-  background: rgba(148, 163, 184, 0.12);
+  padding: 5px 12px;
+  border-radius: 6px;
+  font-size: 11.5px;
+  font-weight: 500;
+  background: var(--surface-card);
   color: var(--text-muted);
-  border: 1px solid rgba(148, 163, 184, 0.12);
+  border: 1px solid var(--border-subtle);
+  transition: all 0.2s ease;
 
   &[data-active='true'] {
-    background: rgba(77, 107, 255, 0.18);
-    color: var(--button-active-color);
-    border-color: rgba(77, 107, 255, 0.35);
+    background: rgba(77, 107, 255, 0.15);
+    color: var(--color-brand);
+    border-color: rgba(77, 107, 255, 0.3);
+    box-shadow: 0 2px 8px rgba(77, 107, 255, 0.15);
   }
 }
 
 .btn {
-  min-width: 88px;
-  padding: 8px 16px;
-  border-radius: 999px;
+  min-width: 72px;
+  padding: 8px 14px;
+  border-radius: 8px;
   border: 1px solid transparent;
-  font-size: 13px;
+  font-size: 12.5px;
+  font-weight: 500;
   cursor: pointer;
-  transition: background 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  white-space: nowrap;
 
   &:disabled {
     cursor: not-allowed;
-    opacity: 0.6;
+    opacity: 0.5;
   }
 
   &--ghost {
@@ -324,17 +454,30 @@ function handleKeydown(event: KeyboardEvent) {
     border-color: var(--border-subtle);
 
     &:hover:not(:disabled) {
-      background: rgba(148, 163, 184, 0.08);
+      background: var(--surface-card);
+      color: var(--text-primary);
+      border-color: var(--border);
+      transform: translateY(-1px);
+    }
+
+    &:active:not(:disabled) {
+      transform: translateY(0);
     }
   }
 
   &--primary {
     background: var(--button-active-bg);
     color: var(--button-active-color);
-    box-shadow: 0 10px 18px rgba(77, 107, 255, 0.25);
+    box-shadow: 0 2px 8px rgba(77, 107, 255, 0.3);
 
     &:hover:not(:disabled) {
-      box-shadow: 0 12px 24px rgba(77, 107, 255, 0.32);
+      box-shadow: 0 4px 12px rgba(77, 107, 255, 0.4);
+      transform: translateY(-1px);
+    }
+
+    &:active:not(:disabled) {
+      transform: translateY(0);
+      box-shadow: 0 2px 6px rgba(77, 107, 255, 0.3);
     }
   }
 
@@ -345,19 +488,39 @@ function handleKeydown(event: KeyboardEvent) {
 
     &:hover:not(:disabled) {
       background: rgba(239, 68, 68, 0.2);
-      color: #fef2f2;
+      color: #fee2e2;
+      border-color: rgba(239, 68, 68, 0.35);
+      transform: translateY(-1px);
+    }
+
+    &:active:not(:disabled) {
+      transform: translateY(0);
     }
   }
 }
 
 .preview-hint {
-  margin-top: 18px;
-  padding: 12px 16px;
+  margin-top: 20px;
+  padding: 14px 18px;
   border-radius: 12px;
-  background: rgba(148, 163, 184, 0.12);
-  border: 1px solid rgba(148, 163, 184, 0.1);
-  font-size: 13px;
+  background: var(--surface-card);
+  border: 1px solid var(--border-subtle);
+  font-size: 12.5px;
   color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  &::before {
+    content: 'ℹ';
+    font-size: 14px;
+    opacity: 0.7;
+  }
+
+  p {
+    margin: 0;
+    line-height: 1.5;
+  }
 }
 
 @keyframes spin {
@@ -373,20 +536,52 @@ function handleKeydown(event: KeyboardEvent) {
 
   .modal-card {
     border-radius: 14px;
+    max-height: 90vh;
   }
 
-  .snippet-item {
-    grid-template-columns: 1fr;
-    align-items: flex-start;
+  .modal-card__header {
+    padding: 20px 20px 14px;
+    flex-direction: column;
+    gap: 16px;
 
-    &[data-expanded='true'] {
-      border-color: rgba(77, 107, 255, 0.6);
+    .actions {
+      width: 100%;
+      justify-content: flex-end;
     }
   }
 
-  .snippet-item__actions {
+  .modal-card__body {
+    padding: 0 20px 24px;
+  }
+
+  .snippet-item__main {
+    padding: 16px 20px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .snippet-item__meta {
     width: 100%;
-    justify-content: flex-end;
+    justify-content: flex-start;
+  }
+
+  .snippet-item__actions {
+    padding: 14px 20px;
+    gap: 6px;
+
+    .btn {
+      flex: 1;
+      min-width: 0;
+      font-size: 12px;
+      padding: 8px 12px;
+    }
+  }
+
+  .snippet-item__preview {
+    margin: 0 20px 16px;
+    padding: 14px 16px;
+    max-height: 200px;
   }
 }
 </style>

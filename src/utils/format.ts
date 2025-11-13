@@ -42,10 +42,66 @@ export function parseJsonError(error: unknown, source: string): JsonParseError |
   // JSON.parse 的错误消息格式通常是: "Unexpected token X in JSON at position Y"
   const positionMatch = errorMessage.match(/position\s+(\d+)/i)
   if (positionMatch && positionMatch[1]) {
-    const position = parseInt(positionMatch[1], 10)
+    let position = parseInt(positionMatch[1], 10)
+    
+    // 对于某些错误，JSON.parse 报告的位置可能是错误字符后面的位置
+    // 我们需要向前查找实际的错误字符（如多余的逗号、括号等）
+    if (position >= 0 && position < source.length) {
+      const charAtPos = source[position]
+      const charBeforePos = position > 0 ? source[position - 1] : ''
+      
+      // 如果错误消息提到 } 或 ]，且前一个字符是逗号，错误应该在逗号处
+      if (charAtPos && (charAtPos === '}' || charAtPos === ']') && charBeforePos === ',') {
+        position = position - 1
+      }
+      // 如果错误消息提到 } 或 ]，向前查找逗号（包括跨行查找）
+      else if (charAtPos && (charAtPos === '}' || charAtPos === ']')) {
+        let searchPos = position - 1
+        let foundComma = false
+        // 向前查找，跳过所有空白字符（包括空格、制表符、换行符等）
+        while (searchPos >= 0) {
+          const char = source[searchPos]
+          if (char === undefined) {
+            break
+          }
+          // 如果找到逗号，错误应该在逗号处
+          if (char === ',') {
+            position = searchPos
+            foundComma = true
+            break
+          }
+          // 如果遇到非空白字符但不是逗号，停止查找
+          if (!/\s/.test(char)) {
+            break
+          }
+          searchPos--
+        }
+      }
+      // 如果当前位置是空白字符，向前查找非空白字符
+      else if (charAtPos && /\s/.test(charAtPos)) {
+        let searchPos = position - 1
+        while (searchPos >= 0) {
+          const char = source[searchPos]
+          if (char === undefined || !/\s/.test(char)) {
+            break
+          }
+          searchPos--
+        }
+        if (searchPos >= 0) {
+          const char = source[searchPos]
+          // 如果找到的是逗号，可能是多余的逗号
+          if (char === ',') {
+            position = searchPos
+          }
+        }
+      }
+    }
+    
+    // 计算行号和列号
     let currentPos = 0
     let line = 1
     let column = 1
+    let found = false
     
     for (let i = 0; i < lines.length; i++) {
       const currentLine = lines[i] ?? ''
@@ -53,12 +109,20 @@ export function parseJsonError(error: unknown, source: string): JsonParseError |
       const lineStart = currentPos
       const lineEnd = currentPos + lineLength
       
-      // 检查错误位置是否在当前行内（包括行尾）
-      if (position >= lineStart && position <= lineEnd) {
+      // 检查错误位置是否在当前行内
+      // 注意：position 应该在 [lineStart, lineEnd) 范围内（不包括换行符）
+      if (position >= lineStart && position < lineEnd) {
         line = i + 1
-        // 列号从1开始，所以是 position - lineStart + 1
-        // 但如果位置在行尾之后（换行符位置），则指向行尾
-        column = Math.min(position - lineStart + 1, lineLength + 1)
+        column = position - lineStart + 1
+        found = true
+        break
+      }
+      
+      // 如果位置正好在行尾（换行符位置），也属于当前行
+      if (position === lineEnd) {
+        line = i + 1
+        column = lineLength + 1
+        found = true
         break
       }
       
@@ -67,17 +131,36 @@ export function parseJsonError(error: unknown, source: string): JsonParseError |
     }
     
     // 如果错误位置超出所有行，指向最后一行
-    if (line === 1 && position >= currentPos) {
+    if (!found && position >= currentPos) {
       const lastLineIndex = lines.length - 1
       if (lastLineIndex >= 0) {
         line = lines.length
         const lastLine = lines[lastLineIndex] ?? ''
-        column = lastLine.length + 1
+        column = Math.min(position - (currentPos - lastLine.length - 1) + 1, lastLine.length + 1)
+      }
+    }
+    
+    // 如果仍然没找到，使用更宽松的查找
+    if (!found) {
+      currentPos = 0
+      for (let i = 0; i < lines.length; i++) {
+        const currentLine = lines[i] ?? ''
+        const lineLength = currentLine.length
+        const lineStart = currentPos
+        
+        if (position >= lineStart && position <= currentPos + lineLength) {
+          line = i + 1
+          column = Math.max(1, Math.min(position - lineStart + 1, lineLength + 1))
+          found = true
+          break
+        }
+        
+        currentPos += lineLength + 1
       }
     }
     
     // 获取错误位置的字符
-    const errorChar = source[position] || ''
+    const errorChar = position < source.length ? source[position] : ''
     
     // 清理错误消息，使其更友好
     let friendlyMessage = errorMessage
