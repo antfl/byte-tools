@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref, watch, nextTick, onUnmounted } from 'vue'
 import type { PanelKey } from '@/types/jsonTools.ts'
 import type { StoredSnippet } from '@/services/storageStore.ts'
 import { formatByteSize, formatDateTime } from '@/utils/format.ts'
@@ -24,12 +24,116 @@ const emit = defineEmits<{
 const panelLabel = computed(() => (props.panel === 'source' ? '源面板' : '目标面板'))
 const selectedSnippet = computed(() => props.items.find((item) => item.id === props.selectedId))
 
+// 搜索和排序
+const searchQuery = ref('')
+const sortBy = ref<'updatedAt' | 'size' | 'title'>('updatedAt')
+const sortOrder = ref<'asc' | 'desc'>('desc')
+const keyboardSelectedIndex = ref<number>(-1)
+
+// 过滤和排序后的列表
+const filteredAndSortedItems = computed(() => {
+  let result = [...props.items]
+
+  // 搜索过滤
+  if (searchQuery.value.trim()) {
+    const query = searchQuery.value.trim().toLowerCase()
+    result = result.filter((item) => item.title.toLowerCase().includes(query))
+  }
+
+  // 排序
+  result.sort((a, b) => {
+    let comparison = 0
+    if (sortBy.value === 'updatedAt') {
+      comparison = a.updatedAt - b.updatedAt
+    } else if (sortBy.value === 'size') {
+      comparison = a.size - b.size
+    } else if (sortBy.value === 'title') {
+      comparison = a.title.localeCompare(b.title, 'zh-CN')
+    }
+    return sortOrder.value === 'asc' ? comparison : -comparison
+  })
+
+  return result
+})
+
+
 function handleKeydown(event: KeyboardEvent) {
+  // 只在模态框可见时处理
+  if (!props.visible) {
+    return
+  }
+
   if (event.key === 'Escape') {
     event.preventDefault()
     emit('close')
+    return
+  }
+
+  // 如果正在输入搜索框或选择框，不处理导航
+  if (event.target instanceof HTMLInputElement || event.target instanceof HTMLSelectElement || event.target instanceof HTMLButtonElement) {
+    return
+  }
+
+  if (event.key === 'ArrowDown') {
+    event.preventDefault()
+    const items = filteredAndSortedItems.value
+    if (items.length > 0) {
+      keyboardSelectedIndex.value = keyboardSelectedIndex.value < items.length - 1 ? keyboardSelectedIndex.value + 1 : 0
+      scrollToItem(keyboardSelectedIndex.value)
+    }
+  } else if (event.key === 'ArrowUp') {
+    event.preventDefault()
+    const items = filteredAndSortedItems.value
+    if (items.length > 0) {
+      keyboardSelectedIndex.value = keyboardSelectedIndex.value > 0 ? keyboardSelectedIndex.value - 1 : items.length - 1
+      scrollToItem(keyboardSelectedIndex.value)
+    }
+  } else if (event.key === 'Enter' && keyboardSelectedIndex.value >= 0) {
+    event.preventDefault()
+    const item = filteredAndSortedItems.value[keyboardSelectedIndex.value]
+    if (item) emit('select', item.id)
   }
 }
+
+function scrollToItem(index: number) {
+  nextTick(() => {
+    const items = document.querySelectorAll('.snippet-item')
+    const targetItem = items[index] as HTMLElement
+    if (targetItem) {
+      targetItem.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+    }
+  })
+}
+
+const resetKeyboardSelection = () => { keyboardSelectedIndex.value = -1 }
+
+watch(() => props.visible, (newVal) => {
+  if (newVal) {
+    searchQuery.value = ''
+    sortBy.value = 'updatedAt'
+    sortOrder.value = 'desc'
+    keyboardSelectedIndex.value = -1
+    nextTick(() => {
+      const searchInput = document.querySelector('.search-input') as HTMLInputElement
+      searchInput?.focus()
+    })
+  }
+})
+
+watch(() => props.items.length, resetKeyboardSelection)
+
+// 使用 watch 来管理事件监听器，确保只在可见时监听
+watch(() => props.visible, (isVisible) => {
+  if (isVisible) {
+    document.addEventListener('keydown', handleKeydown)
+  } else {
+    document.removeEventListener('keydown', handleKeydown)
+  }
+}, { immediate: true })
+
+onUnmounted(() => {
+  document.removeEventListener('keydown', handleKeydown)
+})
 </script>
 
 <template>
@@ -39,13 +143,18 @@ function handleKeydown(event: KeyboardEvent) {
       class="modal-overlay"
       role="presentation"
       @click.self="emit('close')"
-      @keydown="handleKeydown"
       tabindex="-1"
     >
       <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="cache-dialog-title">
         <header class="modal-card__header">
           <div>
-            <h2 id="cache-dialog-title">缓存内容库</h2>
+            <h2 id="cache-dialog-title">
+              缓存内容库
+              <span v-if="items.length > 0" class="header-count">
+                <span v-if="searchQuery">{{ filteredAndSortedItems.length }} / {{ items.length }}</span>
+                <span v-else>{{ items.length }}</span>
+              </span>
+            </h2>
             <p class="modal-card__subtitle">
               选择一条记录填充到
               <strong>{{ panelLabel }}</strong>
@@ -68,52 +177,93 @@ function handleKeydown(event: KeyboardEvent) {
             <span>正在加载缓存列表…</span>
           </div>
 
-          <div v-else-if="items.length === 0" class="empty">
-            <div class="empty__icon" aria-hidden="true">📭</div>
-            <h3>暂无缓存数据</h3>
-            <p>保存内容后即可在此快速复用。</p>
-          </div>
+          <template v-else>
+            <!-- 搜索和排序工具栏 -->
+            <div v-if="items.length > 0" class="toolbar">
+              <div class="search-box">
+                <input
+                  v-model="searchQuery"
+                  type="text"
+                  class="search-input"
+                  placeholder="搜索缓存项..."
+                  @input="resetKeyboardSelection"
+                />
+                <span v-if="searchQuery" class="search-clear" @click="searchQuery = ''; resetKeyboardSelection()">×</span>
+              </div>
+              <div class="sort-controls">
+                <select v-model="sortBy" class="sort-select" @change="resetKeyboardSelection">
+                  <option value="updatedAt">按时间</option>
+                  <option value="size">按大小</option>
+                  <option value="title">按标题</option>
+                </select>
+                <button
+                  type="button"
+                  class="sort-order-btn"
+                  :title="sortOrder === 'desc' ? '降序' : '升序'"
+                  @click="sortOrder = sortOrder === 'desc' ? 'asc' : 'desc'; resetKeyboardSelection()"
+                >
+                  {{ sortOrder === 'desc' ? '↓' : '↑' }}
+                </button>
+              </div>
+            </div>
 
-          <ul v-else class="snippet-list">
-            <li
-              v-for="snippet in items"
-              :key="snippet.id"
-              class="snippet-item"
-              :data-expanded="props.selectedId === snippet.id"
-            >
-              <div class="snippet-item__main">
-                <div>
-                  <h3>{{ snippet.title }}</h3>
-                  <p>{{ formatDateTime(snippet.updatedAt) }} · {{ formatByteSize(snippet.size) }}</p>
+            <!-- 空状态 -->
+            <div v-if="items.length === 0" class="empty">
+              <div class="empty__icon" aria-hidden="true">📭</div>
+              <h3>暂无缓存数据</h3>
+              <p>保存内容后即可在此快速复用。</p>
+            </div>
+
+            <!-- 搜索无结果 -->
+            <div v-else-if="filteredAndSortedItems.length === 0" class="empty">
+              <div class="empty__icon" aria-hidden="true">🔍</div>
+              <h3>未找到匹配的缓存项</h3>
+              <p>尝试调整搜索条件或排序方式。</p>
+            </div>
+
+            <!-- 列表 -->
+            <ul v-else class="snippet-list">
+              <li
+                v-for="(snippet, index) in filteredAndSortedItems"
+                :key="snippet.id"
+                class="snippet-item"
+                :data-expanded="props.selectedId === snippet.id"
+                :data-keyboard-selected="keyboardSelectedIndex === index"
+              >
+                <div class="snippet-item__main">
+                  <div>
+                    <h3>{{ snippet.title }}</h3>
+                    <p>{{ formatDateTime(snippet.updatedAt) }} - {{ formatByteSize(snippet.size) }}</p>
+                  </div>
+                  <div class="snippet-item__meta">
+                    <span class="tag" :data-active="snippet.panel === panel">来自 {{ snippet.panel === 'source' ? '源面板' : '目标面板' }}</span>
+                  </div>
                 </div>
-                <div class="snippet-item__meta">
-                  <span class="tag" :data-active="snippet.panel === panel">来自 {{ snippet.panel === 'source' ? '源面板' : '目标面板' }}</span>
+                <div class="snippet-item__actions">
+                  <button type="button" class="btn btn--ghost" @click="emit('preview', props.selectedId === snippet.id ? null : snippet.id)">
+                    {{ props.selectedId === snippet.id ? '收起' : '查看' }}
+                  </button>
+                  <button type="button" class="btn btn--ghost" @click="emit('copy', snippet.id)">
+                    复制
+                  </button>
+                  <button type="button" class="btn btn--primary" @click="emit('select', snippet.id)">
+                    导入
+                  </button>
+                  <button type="button" class="btn btn--danger" @click="emit('delete', snippet.id)">
+                    删除
+                  </button>
                 </div>
-              </div>
-              <div class="snippet-item__actions">
-                <button type="button" class="btn btn--ghost" @click="emit('preview', props.selectedId === snippet.id ? null : snippet.id)">
-                  {{ props.selectedId === snippet.id ? '收起' : '查看' }}
-                </button>
-                <button type="button" class="btn btn--ghost" @click="emit('copy', snippet.id)">
-                  复制
-                </button>
-                <button type="button" class="btn btn--primary" @click="emit('select', snippet.id)">
-                  导入
-                </button>
-                <button type="button" class="btn btn--danger" @click="emit('delete', snippet.id)">
-                  删除
-                </button>
-              </div>
-              <div v-if="props.selectedId === snippet.id" class="snippet-item__preview">
-                <pre>{{ snippet.content }}</pre>
-              </div>
-            </li>
-          </ul>
-          <div v-if="selectedSnippet" class="preview-hint">
-            <p>
-              共 {{ formatByteSize(selectedSnippet.size) }} · 最近更新于 {{ formatDateTime(selectedSnippet.updatedAt) }}
-            </p>
-          </div>
+                <div v-if="props.selectedId === snippet.id" class="snippet-item__preview">
+                  <pre>{{ snippet.content }}</pre>
+                </div>
+              </li>
+            </ul>
+
+            <!-- 预览提示 -->
+            <div v-if="selectedSnippet" class="preview-hint">
+              <p>共 {{ formatByteSize(selectedSnippet.size) }} · 更新于 {{ formatDateTime(selectedSnippet.updatedAt) }}</p>
+            </div>
+          </template>
         </section>
       </div>
     </div>
@@ -157,6 +307,15 @@ function handleKeydown(event: KeyboardEvent) {
     font-size: 22px;
     font-weight: 600;
     color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .header-count {
+    font-size: 14px;
+    font-weight: 400;
+    color: var(--text-muted);
   }
 
   .modal-card__subtitle {
@@ -180,6 +339,116 @@ function handleKeydown(event: KeyboardEvent) {
   padding: 0 32px 28px;
   overflow: auto;
 }
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+  padding: 8px 0 0;
+  flex-wrap: wrap;
+}
+
+.search-box {
+  flex: 1;
+  min-width: 200px;
+  max-width: 400px;
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.search-input {
+  width: 100%;
+  padding: 10px 36px 10px 14px;
+  border: 1.5px solid var(--border-subtle);
+  border-radius: 10px;
+  background: var(--surface-secondary);
+  color: var(--text-primary);
+  font-size: 13.5px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+
+  &:focus {
+    outline: none;
+    border-color: var(--color-brand);
+    box-shadow: 0 0 0 3px rgba(77, 107, 255, 0.1);
+  }
+
+  &::placeholder {
+    color: var(--text-muted);
+  }
+}
+
+.search-clear {
+  position: absolute;
+  right: 10px;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: 18px;
+  line-height: 1;
+  border-radius: 4px;
+  transition: background 0.2s, color 0.2s;
+
+  &:hover {
+    background: var(--surface-card);
+    color: var(--text-primary);
+  }
+}
+
+.sort-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.sort-select {
+  padding: 10px 14px;
+  border: 1.5px solid var(--border-subtle);
+  border-radius: 10px;
+  background: var(--surface-secondary);
+  color: var(--text-primary);
+  font-size: 13.5px;
+  cursor: pointer;
+  transition: border-color 0.2s, box-shadow 0.2s;
+
+  &:focus {
+    outline: none;
+    border-color: var(--color-brand);
+    box-shadow: 0 0 0 3px rgba(77, 107, 255, 0.1);
+  }
+}
+
+.sort-order-btn {
+  width: 38px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid var(--border-subtle);
+  border-radius: 10px;
+  background: var(--surface-secondary);
+  color: var(--text-primary);
+  font-size: 16px;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s, transform 0.1s;
+
+  &:hover {
+    border-color: var(--color-brand);
+    background: var(--surface-card);
+  }
+
+  &:active {
+    transform: scale(0.95);
+  }
+}
+
 
 .loading {
   display: flex;
@@ -275,6 +544,20 @@ function handleKeydown(event: KeyboardEvent) {
       background: rgba(77, 107, 255, 0.05);
     }
   }
+
+  &[data-keyboard-selected='true'] {
+    border-color: var(--color-brand);
+    box-shadow: 0 4px 16px rgba(77, 107, 255, 0.2);
+    transform: translateY(-1px);
+
+    &::before {
+      opacity: 0.6;
+    }
+
+    .snippet-item__main {
+      background: rgba(77, 107, 255, 0.03);
+    }
+  }
 }
 
 .snippet-item__main {
@@ -283,7 +566,7 @@ function handleKeydown(event: KeyboardEvent) {
   justify-content: space-between;
   gap: 16px;
   padding: 20px 24px;
-  transition: background 0.2s ease;
+  transition: background 0.2s;
 
   > div:first-child {
     flex: 1;
@@ -304,15 +587,6 @@ function handleKeydown(event: KeyboardEvent) {
     font-size: 13px;
     color: var(--text-muted);
     line-height: 1.5;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex-wrap: wrap;
-
-    &::before {
-      content: '•';
-      opacity: 0.5;
-    }
   }
 }
 
@@ -422,7 +696,7 @@ function handleKeydown(event: KeyboardEvent) {
   background: var(--surface-card);
   color: var(--text-muted);
   border: 1px solid var(--border-subtle);
-  transition: all 0.2s ease;
+  transition: background 0.2s, color 0.2s, border-color 0.2s, box-shadow 0.2s;
 
   &[data-active='true'] {
     background: rgba(77, 107, 255, 0.15);
@@ -440,7 +714,7 @@ function handleKeydown(event: KeyboardEvent) {
   font-size: 12.5px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: background 0.2s, color 0.2s, border-color 0.2s, box-shadow 0.2s, transform 0.1s;
   white-space: nowrap;
 
   &:disabled {
@@ -552,6 +826,26 @@ function handleKeydown(event: KeyboardEvent) {
 
   .modal-card__body {
     padding: 0 20px 24px;
+  }
+
+  .toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .search-box {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .sort-controls {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .sort-select {
+    flex: 1;
   }
 
   .snippet-item__main {
