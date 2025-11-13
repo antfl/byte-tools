@@ -57,7 +57,6 @@ export function parseJsonError(error: unknown, source: string): JsonParseError |
       // 如果错误消息提到 } 或 ]，向前查找逗号（包括跨行查找）
       else if (charAtPos && (charAtPos === '}' || charAtPos === ']')) {
         let searchPos = position - 1
-        let foundComma = false
         // 向前查找，跳过所有空白字符（包括空格、制表符、换行符等）
         while (searchPos >= 0) {
           const char = source[searchPos]
@@ -67,7 +66,6 @@ export function parseJsonError(error: unknown, source: string): JsonParseError |
           // 如果找到逗号，错误应该在逗号处
           if (char === ',') {
             position = searchPos
-            foundComma = true
             break
           }
           // 如果遇到非空白字符但不是逗号，停止查找
