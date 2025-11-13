@@ -170,7 +170,7 @@ export function parseJsonError(error: unknown, source: string): JsonParseError |
     if (errorMessage.includes('Unexpected end')) {
       friendlyMessage = 'JSON 字符串意外结束，可能缺少闭合括号或引号'
     } else if (errorMessage.includes('Unexpected token')) {
-      const tokenMatch = errorMessage.match(/Unexpected token\s+([^\s]+)/i)
+      const tokenMatch = errorMessage.match(/Unexpected token\s+(\S+)/i)
       if (tokenMatch) {
         friendlyMessage = `发现意外的字符: ${tokenMatch[1]}`
       } else {
