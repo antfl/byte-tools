@@ -41,8 +41,8 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import { RouterLink, useRoute } from "vue-router";
-import SiteLogo from "@/components/SiteLogo.vue";
-import ThemeToggle from "@/components/ThemeToggle.vue";
+import SiteLogo from "@/components/base/SiteLogo.vue";
+import ThemeToggle from "@/components/base/ThemeToggle.vue";
 
 interface InternalNavItem {
   type: "internal";

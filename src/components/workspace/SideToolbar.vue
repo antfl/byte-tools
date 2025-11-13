@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import IconButton from './IconButton.vue'
+import IconButton from '../base/IconButton.vue'
 
 const props = defineProps<{
   mode: 'format' | 'diff'

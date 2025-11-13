@@ -65,7 +65,7 @@
 
 <script setup lang="ts">
 import { RouterLink } from "vue-router";
-import SiteLogo from "@/components/SiteLogo.vue";
+import SiteLogo from "@/components/base/SiteLogo.vue";
 </script>
 
 <style scoped>

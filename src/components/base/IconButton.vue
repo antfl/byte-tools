@@ -16,19 +16,19 @@ type IconButtonIcon =
 
 export type { IconButtonIcon }
 
-import autoIcon from '../assets/icons/auto.svg?raw'
-import clearIcon from '../assets/icons/clear.svg?raw'
-import diffIcon from '../assets/icons/diff.svg?raw'
-import exportIcon from '../assets/icons/export.svg?raw'
-import formatIcon from '../assets/icons/format.svg?raw'
-import importIcon from '../assets/icons/import.svg?raw'
-import minifyIcon from '../assets/icons/minify.svg?raw'
-import moonIcon from '../assets/icons/moon.svg?raw'
-import repairIcon from '../assets/icons/repair.svg?raw'
-import saveIcon from '../assets/icons/save.svg?raw'
-import storageIcon from '../assets/icons/storage.svg?raw'
-import sunIcon from '../assets/icons/sun.svg?raw'
-import infoIcon from '../assets/icons/info.svg?raw'
+import autoIcon from '../../assets/icons/auto.svg?raw'
+import clearIcon from '../../assets/icons/clear.svg?raw'
+import diffIcon from '../../assets/icons/diff.svg?raw'
+import exportIcon from '../../assets/icons/export.svg?raw'
+import formatIcon from '../../assets/icons/format.svg?raw'
+import importIcon from '../../assets/icons/import.svg?raw'
+import minifyIcon from '../../assets/icons/minify.svg?raw'
+import moonIcon from '../../assets/icons/moon.svg?raw'
+import repairIcon from '../../assets/icons/repair.svg?raw'
+import saveIcon from '../../assets/icons/save.svg?raw'
+import storageIcon from '../../assets/icons/storage.svg?raw'
+import sunIcon from '../../assets/icons/sun.svg?raw'
+import infoIcon from '../../assets/icons/info.svg?raw'
 
 const props = withDefaults(
   defineProps<{

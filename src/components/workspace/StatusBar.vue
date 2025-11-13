@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import type { DiffState, MessageLevel, PanelKey } from '../types/jsonTools'
+import type { DiffState, MessageLevel, PanelKey } from '../../types/jsonTools'
 
 type StatusMessage = { level: MessageLevel; text: string } | null
 

@@ -19,6 +19,7 @@ const emit = defineEmits<{
 
 const title = ref('')
 const inputRef = ref<HTMLInputElement | null>(null)
+const errorMessage = ref('')
 
 const panelLabel = computed(() => (props.panel === 'source' ? '源面板' : '目标面板'))
 const sizeLabel = computed(() => formatByteSize(props.size))
@@ -28,13 +29,15 @@ const contentPreview = computed(() => {
   }
   return props.content.length > 320 ? `${props.content.slice(0, 320)}\u2026` : props.content
 })
-const confirmDisabled = computed(() => !title.value.trim() || props.loading)
+const isContentEmpty = computed(() => !props.content || !props.content.trim())
+const confirmDisabled = computed(() => !title.value.trim() || props.loading || isContentEmpty.value)
 
 watch(
   () => props.visible,
   async (visible) => {
     if (visible) {
       title.value = props.initialTitle
+      errorMessage.value = ''
       await nextTick()
       if (inputRef.value) {
         inputRef.value.focus()
@@ -43,6 +46,17 @@ watch(
     }
   },
   { immediate: true }
+)
+
+watch(
+  () => isContentEmpty.value,
+  (empty) => {
+    if (empty && props.visible) {
+      errorMessage.value = '空文本不允许保存'
+    } else if (!empty) {
+      errorMessage.value = ''
+    }
+  }
 )
 
 watch(
@@ -63,8 +77,12 @@ function handleCancel() {
 
 function handleConfirm() {
   if (confirmDisabled.value) {
+    if (isContentEmpty.value) {
+      errorMessage.value = '空文本不允许保存'
+    }
     return
   }
+  errorMessage.value = ''
   emit('confirm', title.value.trim())
 }
 
@@ -113,6 +131,10 @@ function handleKeydown(event: KeyboardEvent) {
               :disabled="props.loading"
             />
           </label>
+
+          <div v-if="errorMessage" class="error-message">
+            {{ errorMessage }}
+          </div>
 
           <div class="meta">
             <div class="meta__item">
@@ -238,6 +260,15 @@ function handleKeydown(event: KeyboardEvent) {
       opacity: 0.6;
     }
   }
+}
+
+.error-message {
+  padding: 10px 14px;
+  font-size: 13px;
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: 8px;
 }
 
 .meta {

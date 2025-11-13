@@ -19,7 +19,7 @@
 </template>
 
 <script setup lang="ts">
-import SiteLogo from "@/components/SiteLogo.vue";
+import SiteLogo from "@/components/base/SiteLogo.vue";
 
 const year = new Date().getFullYear();
 </script>
@@ -82,10 +82,6 @@ const year = new Date().getFullYear();
 
 .footer-meta a:hover {
   text-decoration: underline;
-}
-
-.footer-separator {
-  margin: 0 0.35rem;
 }
 
 @media (max-width: 640px) {

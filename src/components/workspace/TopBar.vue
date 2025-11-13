@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import IconButton from './IconButton.vue'
-import type { IconButtonIcon } from './IconButton.vue'
-import Logo from '../assets/logo.svg'
-import type { PanelKey, ToolAction } from '../types/jsonTools'
+import IconButton from '../base/IconButton.vue'
+import type { IconButtonIcon } from '../base/IconButton.vue'
+import Logo from '../../assets/logo.svg'
+import type { PanelKey, ToolAction } from '../../types/jsonTools'
 
 type ActionKey = 'import' | 'save' | 'export' | 'format' | 'minify' | 'repair' | 'clear'
 type ActionIcon = Extract<IconButtonIcon, 'import' | 'save' | 'export' | 'format' | 'minify' | 'repair' | 'clear'>
@@ -258,13 +258,11 @@ function isActive(panel: PanelKey, action: ActionKey) {
   gap: 6px;
   padding: 1px;
   border-radius: var(--radius-base);
-  background: transparent;
-  border: 1px solid var(--border-subtle);
-  transition: background-color 0.2s ease, border-color 0.2s ease;
+  background: var(--surface-toolbar);
+  transition: background-color 0.2s ease;
 
   &:hover {
-    background-color: rgba(77, 107, 255, 0.03);
-    border-color: transparent;
+    background-color: color-mix(in srgb, var(--surface-toolbar) 100%, var(--color-brand) 8%);
   }
 }
 

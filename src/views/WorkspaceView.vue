@@ -5,11 +5,11 @@ import type { editor as MonacoEditorNS } from 'monaco-editor'
 import * as monaco from 'monaco-editor'
 import { jsonrepair } from 'jsonrepair'
 import { create as createDiffer } from 'jsondiffpatch'
-import TopBar from '../components/TopBar.vue'
-import SideToolbar from '../components/SideToolbar.vue'
-import FormatWorkspace from '../components/FormatWorkspace.vue'
-import DiffWorkspace from '../components/DiffWorkspace.vue'
-import StatusBar from '../components/StatusBar.vue'
+import TopBar from '../components/workspace/TopBar.vue'
+import SideToolbar from '../components/workspace/SideToolbar.vue'
+import FormatWorkspace from '../components/workspace/FormatWorkspace.vue'
+import DiffWorkspace from '../components/workspace/DiffWorkspace.vue'
+import StatusBar from '../components/workspace/StatusBar.vue'
 import StorageDialog from '../components/modals/StorageDialog.vue'
 import ImportOptionsModal from '../components/modals/ImportOptionsModal.vue'
 import CachePickerModal from '../components/modals/CachePickerModal.vue'
@@ -451,6 +451,13 @@ async function handleConfirmSave(title: string) {
   }
   const panel = storageDialog.panel
   const content = state[panel]
+  
+  // 检查内容是否为空
+  if (!content || !content.trim()) {
+    showMessage('error', '空文本不允许保存')
+    return
+  }
+  
   storageDialog.loading = true
   try {
     await saveSnippet(panel, title, content)
