@@ -24,19 +24,28 @@ const emit = defineEmits<{
   (e: 'toggleAutoFormat'): void
 }>()
 
-const ACTION_ITEMS: Array<{
+// 按功能类型分组按钮
+const DATA_ACTIONS: Array<{
   key: ActionKey
   icon: ActionIcon
   title: string
 }> = [
   { key: 'save', icon: 'save', title: '存储到缓存' },
   { key: 'import', icon: 'import', title: '导入' },
-  { key: 'export', icon: 'export', title: '导出' },
+  { key: 'export', icon: 'export', title: '导出' }
+]
+
+const FORMAT_ACTIONS: Array<{
+  key: ActionKey
+  icon: ActionIcon
+  title: string
+}> = [
   { key: 'format', icon: 'format', title: '格式化' },
   { key: 'minify', icon: 'minify', title: '压缩' },
-  { key: 'repair', icon: 'repair', title: '尝试修复' },
-  { key: 'clear', icon: 'clear', title: '清空' }
+  { key: 'repair', icon: 'repair', title: '尝试修复' }
 ]
+
+const CLEAR_ACTION = { key: 'clear' as ActionKey, icon: 'clear' as ActionIcon, title: '清空' }
 
 function handleAction(action: ActionKey, panel: PanelKey) {
   switch (action) {
@@ -78,47 +87,123 @@ function isActive(panel: PanelKey, action: ActionKey) {
 
     <div v-if="mode === 'format'" class="top-bar-actions">
       <div class="actions-row">
-        <IconButton
-          icon="auto"
-          :title="autoFormat ? '自动格式化已启用（点击关闭）' : '自动格式化已禁用（点击启用）'"
-          :active="autoFormat"
-          @click="emit('toggleAutoFormat')"
-        />
-        <div class="actions-divider"></div>
-        <IconButton
-          v-for="action in ACTION_ITEMS"
-          :key="action.key"
-          :icon="action.icon"
-          :title="action.title"
-          :active="isActive('source', action.key)"
-          @click="handleAction(action.key, 'source')"
-        />
-      </div>
-    </div>
-
-    <div v-else class="top-bar-actions top-bar-actions--diff">
-      <div class="actions-group">
-        <div class="actions-row">
+        <!-- 自动格式化组 -->
+        <div class="action-group">
           <IconButton
-            v-for="action in ACTION_ITEMS"
-            :key="`source-${action.key}`"
+            icon="auto"
+            :title="autoFormat ? '自动格式化已启用（点击关闭）' : '自动格式化已禁用（点击启用）'"
+            :active="autoFormat"
+            @click="emit('toggleAutoFormat')"
+          />
+        </div>
+        <!-- 数据管理组 -->
+        <div class="action-group">
+          <IconButton
+            v-for="action in DATA_ACTIONS"
+            :key="action.key"
+            :icon="action.icon"
+            :title="action.title"
+            :active="isActive('source', action.key)"
+            :show-label="action.key === 'import' || action.key === 'export'"
+            @click="handleAction(action.key, 'source')"
+          />
+        </div>
+        <!-- 格式化工具组 -->
+        <div class="action-group">
+          <IconButton
+            v-for="action in FORMAT_ACTIONS"
+            :key="action.key"
             :icon="action.icon"
             :title="action.title"
             :active="isActive('source', action.key)"
             @click="handleAction(action.key, 'source')"
           />
         </div>
+        <!-- 清空组 -->
+        <div class="action-group">
+          <IconButton
+            :icon="CLEAR_ACTION.icon"
+            :title="CLEAR_ACTION.title"
+            :active="isActive('source', CLEAR_ACTION.key)"
+            @click="handleAction(CLEAR_ACTION.key, 'source')"
+          />
+        </div>
+      </div>
+    </div>
+
+    <div v-else class="top-bar-actions top-bar-actions--diff">
+      <div class="actions-group">
+        <div class="actions-row">
+          <!-- 数据管理组 -->
+          <div class="action-group">
+            <IconButton
+              v-for="action in DATA_ACTIONS"
+              :key="`source-${action.key}`"
+              :icon="action.icon"
+              :title="action.title"
+              :active="isActive('source', action.key)"
+              :show-label="action.key === 'import' || action.key === 'export'"
+              @click="handleAction(action.key, 'source')"
+            />
+          </div>
+          <!-- 格式化工具组 -->
+          <div class="action-group">
+            <IconButton
+              v-for="action in FORMAT_ACTIONS"
+              :key="`source-${action.key}`"
+              :icon="action.icon"
+              :title="action.title"
+              :active="isActive('source', action.key)"
+              @click="handleAction(action.key, 'source')"
+            />
+          </div>
+          <!-- 清空组 -->
+          <div class="action-group">
+            <IconButton
+              :key="`source-${CLEAR_ACTION.key}`"
+              :icon="CLEAR_ACTION.icon"
+              :title="CLEAR_ACTION.title"
+              :active="isActive('source', CLEAR_ACTION.key)"
+              @click="handleAction(CLEAR_ACTION.key, 'source')"
+            />
+          </div>
+        </div>
       </div>
       <div class="actions-group">
         <div class="actions-row">
-          <IconButton
-            v-for="action in ACTION_ITEMS"
-            :key="`target-${action.key}`"
-            :icon="action.icon"
-            :title="action.title"
-            :active="isActive('target', action.key)"
-            @click="handleAction(action.key, 'target')"
-          />
+          <!-- 数据管理组 -->
+          <div class="action-group">
+            <IconButton
+              v-for="action in DATA_ACTIONS"
+              :key="`target-${action.key}`"
+              :icon="action.icon"
+              :title="action.title"
+              :active="isActive('target', action.key)"
+              :show-label="action.key === 'import' || action.key === 'export'"
+              @click="handleAction(action.key, 'target')"
+            />
+          </div>
+          <!-- 格式化工具组 -->
+          <div class="action-group">
+            <IconButton
+              v-for="action in FORMAT_ACTIONS"
+              :key="`target-${action.key}`"
+              :icon="action.icon"
+              :title="action.title"
+              :active="isActive('target', action.key)"
+              @click="handleAction(action.key, 'target')"
+            />
+          </div>
+          <!-- 清空组 -->
+          <div class="action-group">
+            <IconButton
+              :key="`target-${CLEAR_ACTION.key}`"
+              :icon="CLEAR_ACTION.icon"
+              :title="CLEAR_ACTION.title"
+              :active="isActive('target', CLEAR_ACTION.key)"
+              @click="handleAction(CLEAR_ACTION.key, 'target')"
+            />
+          </div>
         </div>
       </div>
     </div>
@@ -164,15 +249,25 @@ function isActive(panel: PanelKey, action: ActionKey) {
 .actions-row {
   display: flex;
   align-items: center;
-  gap: 18px;
+  gap: 8px;
 }
 
-.actions-divider {
-  width: 1px;
-  height: 20px;
-  background-color: var(--border-subtle);
-  margin: 0 4px;
+.action-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 1px;
+  border-radius: var(--radius-base);
+  background: transparent;
+  border: 1px solid var(--border-subtle);
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+
+  &:hover {
+    background-color: rgba(77, 107, 255, 0.03);
+    border-color: transparent;
+  }
 }
+
 
 @media (max-width: 960px) {
   .top-bar-actions {

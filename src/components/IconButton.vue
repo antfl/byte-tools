@@ -35,9 +35,11 @@ const props = withDefaults(
     icon: IconButtonIcon
     title: string
     active?: boolean
+    showLabel?: boolean
   }>(),
   {
-    active: false
+    active: false,
+    showLabel: false
   }
 )
 
@@ -69,12 +71,13 @@ const handleClick = () => {
 <template>
   <button
     type="button"
-    :class="['icon-button', { 'icon-button--active': props.active }]"
+    :class="['icon-button', { 'icon-button--active': props.active, 'icon-button--with-label': props.showLabel }]"
     :title="props.title"
     :aria-label="props.title"
     @click="handleClick"
   >
     <span class="icon-button__icon" aria-hidden="true" v-html="ICON_MAP[props.icon]" />
+    <span v-if="props.showLabel" class="icon-button__label">{{ props.title }}</span>
   </button>
 </template>
 
@@ -104,11 +107,30 @@ const handleClick = () => {
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    flex-shrink: 0;
 
     :deep(svg) {
       width: 100%;
       height: 100%;
       display: block;
+    }
+  }
+
+  &__label {
+    font-size: 12px;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+
+  &--with-label {
+    width: auto;
+    height: var(--icon-button-size);
+    gap: 0;
+
+    .icon-button__icon {
+      width: 18px;
+      height: 18px;
+      transform: scale(1);
     }
   }
 
