@@ -13,6 +13,7 @@ type IconButtonIcon =
   | 'moon'
   | 'info'
   | 'auto'
+  | 'deep'
 
 export type { IconButtonIcon }
 
@@ -29,6 +30,7 @@ import saveIcon from '../../assets/icons/save.svg?raw'
 import storageIcon from '../../assets/icons/storage.svg?raw'
 import sunIcon from '../../assets/icons/sun.svg?raw'
 import infoIcon from '../../assets/icons/info.svg?raw'
+import deepIcon from '../../assets/icons/deep.svg?raw'
 
 const props = withDefaults(
   defineProps<{
@@ -60,7 +62,8 @@ const ICON_MAP: Record<IconButtonIcon, string> = {
   save: saveIcon,
   storage: storageIcon,
   sun: sunIcon,
-  info: infoIcon
+  info: infoIcon,
+  deep: deepIcon
 }
 
 const handleClick = () => {

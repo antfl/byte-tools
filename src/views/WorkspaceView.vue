@@ -66,6 +66,7 @@ const previewIsValid = ref(true)
 const cursorPosition = ref<{ line: number; column: number } | null>(null)
 const sourceEditorInstance = ref<MonacoEditorNS.IStandaloneCodeEditor | null>(null)
 const errorPosition = ref<{ line: number; column: number } | null>(null)
+const deepParse = ref(true)
 
 const storageDialog = reactive({
   visible: false,
@@ -263,8 +264,8 @@ watch(
 )
 
 watch(
-  [() => mode.value, () => state.source],
-  ([currentMode, source]) => {
+  [() => mode.value, () => state.source, () => deepParse.value],
+  ([currentMode, source, isDeepParse]) => {
     if (currentMode === 'diff') {
       return
     }
@@ -279,7 +280,13 @@ watch(
     }
     
     try {
-      const parsed = JSON.parse(source)
+      let parsed = JSON.parse(source)
+      
+      // 如果启用了深度解析，递归解析所有字符串中的 JSON
+      if (isDeepParse) {
+        parsed = deepParseJson(parsed)
+      }
+      
       previewContent.value = JSON.stringify(parsed, null, 2)
       previewIsValid.value = true
       errorPosition.value = null
@@ -351,6 +358,11 @@ ${source}`
   },
   { immediate: true }
 )
+
+function handleToggleDeepParse() {
+  deepParse.value = !deepParse.value
+  showMessage('success', deepParse.value ? '已启用深度解析' : '已禁用深度解析')
+}
 
 watch(
   [() => storageDialog.visible, () => storageDialog.panel, () => state.source, () => state.target],
@@ -743,6 +755,47 @@ function handleToggleAutoFormat() {
   }
   showMessage('success', autoFormat.value ? '已启用自动格式化' : '已禁用自动格式化')
 }
+
+/**
+ * 深度解析 JSON 对象，递归解析所有字符串值中的 JSON
+ */
+function deepParseJson(obj: any): any {
+  if (typeof obj === 'string') {
+    // 尝试解析字符串中的 JSON
+    const trimmed = obj.trim()
+    // 检查是否看起来像 JSON（以 { 或 [ 开头）
+    if (
+      (trimmed.startsWith('{') && trimmed.endsWith('}')) ||
+      (trimmed.startsWith('[') && trimmed.endsWith(']'))
+    ) {
+      try {
+        const parsed = JSON.parse(trimmed)
+        // 如果解析成功，递归处理解析后的对象
+        return deepParseJson(parsed)
+      } catch {
+        // 解析失败，返回原字符串
+        return obj
+      }
+    }
+    return obj
+  }
+
+  if (Array.isArray(obj)) {
+    return obj.map((item) => deepParseJson(item))
+  }
+
+  if (obj !== null && typeof obj === 'object') {
+    const result: any = {}
+    for (const key in obj) {
+      if (Object.prototype.hasOwnProperty.call(obj, key)) {
+        result[key] = deepParseJson(obj[key])
+      }
+    }
+    return result
+  }
+
+  return obj
+}
 </script>
 
 <template>
@@ -751,6 +804,7 @@ function handleToggleAutoFormat() {
       :mode="mode"
       :active-tool="activeTool"
       :auto-format="autoFormat"
+      :deep-parse="deepParse"
       @trigger-import="triggerImport"
       @save="handleSave"
       @export="handleExport"
@@ -759,6 +813,7 @@ function handleToggleAutoFormat() {
       @repair="handleRepair"
       @clear="handleClear"
       @toggle-auto-format="handleToggleAutoFormat"
+      @toggle-deep-parse="handleToggleDeepParse"
     />
 
     <div class="main-layout">

@@ -11,6 +11,7 @@ const props = defineProps<{
   mode: 'format' | 'diff'
   activeTool: ToolAction | null
   autoFormat?: boolean
+  deepParse?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -22,6 +23,7 @@ const emit = defineEmits<{
   (e: 'repair', panel: PanelKey): void
   (e: 'clear', panel: PanelKey): void
   (e: 'toggleAutoFormat'): void
+  (e: 'toggleDeepParse'): void
 }>()
 
 // 按功能类型分组按钮
@@ -94,6 +96,12 @@ function isActive(panel: PanelKey, action: ActionKey) {
             :title="autoFormat ? '自动格式化已启用（点击关闭）' : '自动格式化已禁用（点击启用）'"
             :active="autoFormat"
             @click="emit('toggleAutoFormat')"
+          />
+          <IconButton
+            icon="deep"
+            :title="deepParse ? '深度解析已启用（点击关闭）' : '深度解析已禁用（点击启用）'"
+            :active="deepParse"
+            @click="emit('toggleDeepParse')"
           />
         </div>
         <!-- 数据管理组 -->
