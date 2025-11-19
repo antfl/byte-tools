@@ -7,7 +7,9 @@ import { jsonrepair } from 'jsonrepair'
 import { create as createDiffer } from 'jsondiffpatch'
 import TopBar from '../components/workspace/TopBar.vue'
 import SideToolbar from '../components/workspace/SideToolbar.vue'
-import FormatWorkspace from '../components/workspace/FormatWorkspace.vue'
+import JsonWorkspace from '../components/workspace/JsonWorkspace.vue'
+import TextWorkspace from '../components/workspace/TextWorkspace.vue'
+import ImageWorkspace from '../components/workspace/ImageWorkspace.vue'
 import DiffWorkspace from '../components/workspace/DiffWorkspace.vue'
 import StatusBar from '../components/workspace/StatusBar.vue'
 import StorageDialog from '../components/modals/StorageDialog.vue'
@@ -15,43 +17,115 @@ import ImportOptionsModal from '../components/modals/ImportOptionsModal.vue'
 import CachePickerModal from '../components/modals/CachePickerModal.vue'
 import { deleteSnippet, getSnippet, listSnippets, saveSnippet } from '../services/storageStore'
 import type { StoredSnippet } from '../services/storageStore'
-import type { PanelKey, ToolAction, MessageLevel, DiffState } from '../types/jsonTools'
+import type { PanelKey, ToolAction, MessageLevel, DiffState, ToolType } from '../types/jsonTools'
 import { useTheme } from '../composables/useTheme'
 import { parseJsonError } from '../utils/format'
+import { getConfig, saveConfig } from '../config/app'
+import {
+  convertCase,
+  encodeBase64,
+  decodeBase64,
+  encodeURL,
+  decodeURL,
+  trimWhitespace,
+  getTextStats,
+  type CaseType,
+  type TrimOption
+} from '../utils/textTools'
 
 const { theme, themeToggleTitle, isDarkTheme, toggleTheme } = useTheme()
 
-const editorTheme = computed(() => `byte-json-${theme.value}`)
+const editorTheme = computed(() => `byte-tools-${theme.value}`)
 const differ = createDiffer({
   arrays: { detectMove: false, includeValueOnMove: false }
 })
 
-// 从 localStorage 恢复左侧 JSON 字符串
-const getStoredSource = (): string => {
+// 从配置加载默认工具类型
+const config = getConfig()
+const toolType = ref<ToolType>(config.defaultTool)
+
+// 从 localStorage 恢复内容
+const getStoredSource = (tool: ToolType): string => {
   try {
-    const stored = localStorage.getItem('byte-json-source')
+    const stored = localStorage.getItem(`byte-tools-source-${tool}`)
     if (stored) {
       return stored
     }
   } catch (error) {
     console.warn('无法读取 localStorage:', error)
   }
-  return `{
-  "name": "Byte JSON",
-  "description": "一个轻量的 JSON 工具"
+  
+  // 根据工具类型返回默认内容
+  switch (tool) {
+    case 'json':
+      return `{
+  "name": "Byte Tools",
+  "description": "一个多功能的在线工具"
 }`
+    case 'text':
+      return '在这里输入或粘贴文本内容...'
+    case 'image':
+      return ''
+    default:
+      return ''
+  }
+}
+
+const getStoredTarget = (tool: ToolType): string => {
+  try {
+    const stored = localStorage.getItem(`byte-tools-target-${tool}`)
+    if (stored) {
+      return stored
+    }
+  } catch (error) {
+    console.warn('无法读取 localStorage:', error)
+  }
+  
+  if (tool === 'json') {
+    return `{
+  "name": "Byte Tools",
+  "description": "一个多功能的在线工具",
+  "features": ["文本", "图片", "JSON"]
+}`
+  }
+  return ''
 }
 
 const state = reactive({
-  source: getStoredSource(),
-  target: `{
-  "name": "Byte JSON",
-  "description": "一个轻量的 JSON 工具",
-  "features": ["对比", "格式化", "修复", "导入导出"]
-}`
+  source: getStoredSource(toolType.value),
+  target: getStoredTarget(toolType.value)
 })
 
 const mode = ref<'format' | 'diff'>('format')
+
+// 监听工具类型变化，更新内容
+watch(toolType, (newTool, oldTool) => {
+  // 保存旧工具的内容
+  if (oldTool) {
+    try {
+      localStorage.setItem(`byte-tools-source-${oldTool}`, state.source)
+      localStorage.setItem(`byte-tools-target-${oldTool}`, state.target)
+    } catch (error) {
+      console.warn('无法保存 localStorage:', error)
+    }
+  }
+  
+  // 加载新工具的内容
+  state.source = getStoredSource(newTool)
+  state.target = getStoredTarget(newTool)
+  
+  // 保存配置
+  saveConfig({ defaultTool: newTool })
+  
+  // JSON 工具才支持 diff 模式
+  if (newTool !== 'json' && mode.value === 'diff') {
+    mode.value = 'format'
+  }
+  
+  // 重置预览内容
+  previewContent.value = ''
+  previewIsValid.value = true
+})
 const activeTool = ref<ToolAction | null>(null)
 const busyPanel = ref<PanelKey | null>(null)
 const message = ref<{ level: MessageLevel; text: string } | null>(null)
@@ -89,47 +163,63 @@ const cachePicker = reactive({
   selectedId: null as string | null
 })
 
-const baseEditorOptions = createDefaultOptions('json')
-Object.assign(baseEditorOptions, {
-  automaticLayout: true,
-  minimap: { enabled: false },
-  scrollBeyondLastLine: false,
-  formatOnPaste: false,
-  formatOnType: false,
-  renderLineHighlight: 'all',
-  fontFamily:
-    '"Cascadia Code", "Fira Code", "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, Courier New, monospace',
-  fontSize: 14,
-  lineHeight: 22,
-  wordWrap: 'on',
-  padding: { top: 16, bottom: 16 },
-  folding: true,
-  foldingStrategy: 'indentation',
-  showFoldingControls: 'always',
-  unfoldOnClickAfterEndOfLine: true
-})
+// 根据工具类型获取编辑器语言
+const getEditorLanguage = (tool: ToolType): string => {
+  switch (tool) {
+    case 'json':
+      return 'json'
+    case 'text':
+      return 'plaintext'
+    case 'image':
+      return 'plaintext'
+    default:
+      return 'plaintext'
+  }
+}
 
+const baseEditorOptions = computed(() => {
+  const options = createDefaultOptions(getEditorLanguage(toolType.value))
+  return {
+    ...options,
+    automaticLayout: true,
+    minimap: { enabled: false },
+    scrollBeyondLastLine: false,
+    formatOnPaste: false,
+    formatOnType: false,
+    renderLineHighlight: 'all',
+    fontFamily:
+      '"Cascadia Code", "Fira Code", "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, Courier New, monospace',
+    fontSize: 14,
+    lineHeight: 22,
+    wordWrap: 'on',
+    padding: { top: 16, bottom: 16 },
+    folding: true,
+    foldingStrategy: 'indentation',
+    showFoldingControls: 'always',
+    unfoldOnClickAfterEndOfLine: true
+  }
+})
 const sourceEditorOptions = computed(() => ({
-  ...baseEditorOptions,
+  ...baseEditorOptions.value,
   readOnly: false,
-  formatOnPaste: autoFormat.value,
-  formatOnType: autoFormat.value
+  formatOnPaste: toolType.value === 'json' ? autoFormat.value : false,
+  formatOnType: toolType.value === 'json' ? autoFormat.value : false
 }))
 
 const previewEditorOptions = computed(() => ({
-  ...baseEditorOptions,
+  ...baseEditorOptions.value,
   readOnly: true
 }))
 
-const diffEditorOptions: MonacoEditorNS.IStandaloneDiffEditorConstructionOptions = {
-  ...baseEditorOptions,
+const diffEditorOptions = computed<MonacoEditorNS.IStandaloneDiffEditorConstructionOptions>(() => ({
+  ...baseEditorOptions.value,
   automaticLayout: true,
   enableSplitViewResizing: true,
   renderSideBySide: true,
   originalEditable: true,
   diffAlgorithm: 'advanced',
   readOnly: false
-}
+}))
 
 function estimateContentSize(content: string): number {
   if (typeof TextEncoder !== 'undefined') {
@@ -170,7 +260,7 @@ async function refreshCacheItems(showError = true) {
 }
 
 onMounted(() => {
-  monaco.editor.defineTheme('byte-json-dark', {
+  monaco.editor.defineTheme('byte-tools-dark', {
     base: 'vs-dark',
     inherit: true,
     rules: [
@@ -200,7 +290,7 @@ onMounted(() => {
     }
   })
 
-  monaco.editor.defineTheme('byte-json-light', {
+  monaco.editor.defineTheme('byte-tools-light', {
     base: 'vs',
     inherit: true,
     rules: [
@@ -230,12 +320,12 @@ onMounted(() => {
     }
   })
 
-  monaco.editor.setTheme(`byte-json-${theme.value}`)
+  monaco.editor.setTheme(`byte-tools-${theme.value}`)
 
   watch(
     theme,
     (modeValue) => {
-      monaco.editor.setTheme(`byte-json-${modeValue}`)
+      monaco.editor.setTheme(`byte-tools-${modeValue}`)
     }
   )
 })
@@ -253,10 +343,10 @@ watch(
 
 // 监听 source 变化并保存到 localStorage
 watch(
-  () => state.source,
-  (source) => {
+  [() => state.source, () => toolType.value],
+  ([source, tool]) => {
     try {
-      localStorage.setItem('byte-json-source', source)
+      localStorage.setItem(`byte-tools-source-${tool}`, source)
     } catch (error) {
       console.warn('无法保存到 localStorage:', error)
     }
@@ -264,9 +354,9 @@ watch(
 )
 
 watch(
-  [() => mode.value, () => state.source, () => deepParse.value],
-  ([currentMode, source, isDeepParse]) => {
-    if (currentMode === 'diff') {
+  [() => mode.value, () => state.source, () => deepParse.value, () => toolType.value],
+  ([currentMode, source, isDeepParse, tool]) => {
+    if (currentMode === 'diff' || tool !== 'json') {
       return
     }
     
@@ -418,6 +508,10 @@ function showMessage(level: MessageLevel, text: string) {
 }
 
 function handleFormat(panel: PanelKey, space = 2) {
+  if (toolType.value !== 'json') {
+    showMessage('info', '格式化功能仅适用于 JSON 工具')
+    return
+  }
   try {
     busyPanel.value = panel
     const source = state[panel]
@@ -433,6 +527,10 @@ function handleFormat(panel: PanelKey, space = 2) {
 }
 
 function handleMinify(panel: PanelKey) {
+  if (toolType.value !== 'json') {
+    showMessage('info', '压缩功能仅适用于 JSON 工具')
+    return
+  }
   try {
     busyPanel.value = panel
     const parsed = JSON.parse(state[panel])
@@ -447,6 +545,10 @@ function handleMinify(panel: PanelKey) {
 }
 
 function handleRepair(panel: PanelKey) {
+  if (toolType.value !== 'json') {
+    showMessage('info', '修复功能仅适用于 JSON 工具')
+    return
+  }
   try {
     busyPanel.value = panel
     const repaired = jsonrepair(state[panel])
@@ -457,6 +559,117 @@ function handleRepair(panel: PanelKey) {
     showMessage('error', '修复失败，无法自动识别问题')
   } finally {
     busyPanel.value = null
+  }
+}
+
+function handleTextCase(panel: PanelKey, caseType: string) {
+  if (toolType.value !== 'text') {
+    showMessage('info', '大小写转换功能仅适用于文本工具')
+    return
+  }
+  try {
+    busyPanel.value = panel
+    const result = convertCase(state.source, caseType as CaseType)
+    previewContent.value = result
+    showMessage('success', '大小写转换成功')
+    activeTool.value = `${panel}-case`
+  } catch (error) {
+    showMessage('error', '大小写转换失败')
+  } finally {
+    busyPanel.value = null
+  }
+}
+
+function handleTextEncode(panel: PanelKey, encodeType: string) {
+  if (toolType.value !== 'text') {
+    showMessage('info', '编码功能仅适用于文本工具')
+    return
+  }
+  try {
+    busyPanel.value = panel
+    let result = ''
+    if (encodeType === 'base64') {
+      result = encodeBase64(state.source)
+    } else if (encodeType === 'url') {
+      result = encodeURL(state.source)
+    }
+    previewContent.value = result
+    showMessage('success', `${encodeType.toUpperCase()} 编码成功`)
+    activeTool.value = `${panel}-encode`
+  } catch (error) {
+    const message = error instanceof Error ? error.message : '编码失败'
+    showMessage('error', message)
+  } finally {
+    busyPanel.value = null
+  }
+}
+
+function handleTextDecode(panel: PanelKey, decodeType: string) {
+  if (toolType.value !== 'text') {
+    showMessage('info', '解码功能仅适用于文本工具')
+    return
+  }
+  try {
+    busyPanel.value = panel
+    let result = ''
+    if (decodeType === 'base64') {
+      result = decodeBase64(state.source)
+    } else if (decodeType === 'url') {
+      result = decodeURL(state.source)
+    }
+    previewContent.value = result
+    showMessage('success', `${decodeType.toUpperCase()} 解码成功`)
+    activeTool.value = `${panel}-decode`
+  } catch (error) {
+    const message = error instanceof Error ? error.message : '解码失败'
+    showMessage('error', message)
+  } finally {
+    busyPanel.value = null
+  }
+}
+
+function handleTextTrim(panel: PanelKey, trimType: string) {
+  if (toolType.value !== 'text') {
+    showMessage('info', '去除空白功能仅适用于文本工具')
+    return
+  }
+  try {
+    busyPanel.value = panel
+    const result = trimWhitespace(state.source, trimType as TrimOption)
+    previewContent.value = result
+    showMessage('success', '去除空白成功')
+    activeTool.value = `${panel}-trim`
+  } catch (error) {
+    showMessage('error', '去除空白失败')
+  } finally {
+    busyPanel.value = null
+  }
+}
+
+function handleTextStats(panel: PanelKey) {
+  if (toolType.value !== 'text') {
+    showMessage('info', '统计功能仅适用于文本工具')
+    return
+  }
+  try {
+    const stats = getTextStats(state.source)
+    // 格式化统计信息，显示在右侧预览区域
+    const statsText = `文本统计信息
+═══════════════════════════════════════
+
+字符数（含空格）: ${stats.characters.toLocaleString()}
+字符数（不含空格）: ${stats.charactersNoSpaces.toLocaleString()}
+单词数: ${stats.words.toLocaleString()}
+行数: ${stats.lines.toLocaleString()}
+段落数: ${stats.paragraphs.toLocaleString()}
+字节数: ${stats.bytes.toLocaleString()}
+
+═══════════════════════════════════════`
+    previewContent.value = statsText
+    showMessage('success', '统计信息已显示在右侧预览区域')
+    activeTool.value = `${panel}-stats`
+  } catch (error) {
+    showMessage('error', '统计失败')
   }
 }
 
@@ -586,7 +799,7 @@ function handlePreviewCacheSnippet(id: string | null) {
 }
 
 async function copyToClipboard(text: string) {
-  if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+  if ('clipboard' in navigator && navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
     await navigator.clipboard.writeText(text)
     return
   }
@@ -646,6 +859,25 @@ function handleImport(panel: PanelKey, event: Event) {
     input.value = ''
     return
   }
+
+  // 图片工具：读取为 base64
+  if (toolType.value === 'image' && file.type.startsWith('image/')) {
+    const reader = new FileReader()
+    reader.onload = () => {
+      state[panel] = String(reader.result ?? '')
+      showMessage('success', `${file.name} 已加载到${panel === 'source' ? '源' : '目标'}面板`)
+      input.value = ''
+      activeTool.value = `${panel}-import`
+    }
+    reader.onerror = () => {
+      showMessage('error', '导入失败，请重试')
+      input.value = ''
+    }
+    reader.readAsDataURL(file)
+    return
+  }
+
+  // 文本和 JSON 工具：读取为文本
   const reader = new FileReader()
   reader.onload = () => {
     state[panel] = String(reader.result ?? '')
@@ -662,10 +894,39 @@ function handleImport(panel: PanelKey, event: Event) {
 
 function handleExport(panel: PanelKey) {
   try {
-    const blob = new Blob([state[panel]], { type: 'application/json;charset=utf-8' })
+    let blob: Blob
+    let filename: string
+    const now = new Date()
+    const timestamp = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}-${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}${String(now.getSeconds()).padStart(2, '0')}`
+    
+    if (toolType.value === 'image' && state[panel].startsWith('data:')) {
+      // 图片：从 base64 转换为 blob
+      const base64Data = state[panel].split(',')[1]
+      if (!base64Data) {
+        showMessage('error', '无效的图片数据')
+        return
+      }
+      const mimeType = state[panel].match(/data:([^;]+)/)?.[1] || 'image/png'
+      const byteCharacters = atob(base64Data)
+      const byteNumbers = new Array(byteCharacters.length)
+      for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i)
+      }
+      const byteArray = new Uint8Array(byteNumbers)
+      blob = new Blob([byteArray], { type: mimeType })
+      const ext = mimeType.split('/')[1] || 'png'
+      filename = `image-${timestamp}.${ext}`
+    } else if (toolType.value === 'json') {
+      blob = new Blob([state[panel]], { type: 'application/json;charset=utf-8' })
+      filename = `json-${timestamp}.json`
+    } else {
+      blob = new Blob([state[panel]], { type: 'text/plain;charset=utf-8' })
+      filename = `text-${timestamp}.txt`
+    }
+    
     const link = document.createElement('a')
     link.href = URL.createObjectURL(blob)
-    link.download = panel === 'source' ? 'source.json' : 'target.json'
+    link.download = filename
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)
@@ -801,6 +1062,7 @@ function deepParseJson(obj: any): any {
 <template>
   <div class="app">
     <TopBar
+      :tool-type="toolType"
       :mode="mode"
       :active-tool="activeTool"
       :auto-format="autoFormat"
@@ -814,10 +1076,17 @@ function deepParseJson(obj: any): any {
       @clear="handleClear"
       @toggle-auto-format="handleToggleAutoFormat"
       @toggle-deep-parse="handleToggleDeepParse"
+      @update:tool-type="toolType = $event"
+      @text-case="handleTextCase"
+      @text-encode="handleTextEncode"
+      @text-decode="handleTextDecode"
+      @text-trim="handleTextTrim"
+      @text-stats="handleTextStats"
     />
 
     <div class="main-layout">
       <SideToolbar
+        :tool-type="toolType"
         :mode="mode"
         :theme-toggle-title="themeToggleTitle"
         :is-dark-theme="isDarkTheme"
@@ -827,9 +1096,35 @@ function deepParseJson(obj: any): any {
         @open-about="handleOpenAbout"
       />
 
-      <section class="workspace" :class="{ 'is-diff': mode === 'diff' }">
-        <FormatWorkspace
-          v-if="mode === 'format'"
+      <section class="workspace" :class="{ 'is-diff': mode === 'diff' && toolType === 'json' }">
+        <!-- JSON 工具 -->
+        <template v-if="toolType === 'json'">
+          <JsonWorkspace
+            v-if="mode === 'format'"
+            :source="state.source"
+            :preview-content="previewContent"
+            :editor-theme="editorTheme"
+            :source-editor-options="sourceEditorOptions"
+            :preview-editor-options="previewEditorOptions"
+            @update:source="state.source = $event"
+            @cursor-change="cursorPosition = $event"
+            @editor-mounted="sourceEditorInstance = $event"
+          />
+          <DiffWorkspace
+            v-else
+            :source="state.source"
+            :target="state.target"
+            :editor-theme="editorTheme"
+            :diff-editor-options="diffEditorOptions"
+            @mount="handleDiffMount"
+            @update:target="state.target = $event"
+            @cursor-change="cursorPosition = $event"
+          />
+        </template>
+
+        <!-- 文本工具 -->
+        <TextWorkspace
+          v-else-if="toolType === 'text'"
           :source="state.source"
           :preview-content="previewContent"
           :editor-theme="editorTheme"
@@ -839,15 +1134,13 @@ function deepParseJson(obj: any): any {
           @cursor-change="cursorPosition = $event"
           @editor-mounted="sourceEditorInstance = $event"
         />
-        <DiffWorkspace
-          v-else
+
+        <!-- 图片工具 -->
+        <ImageWorkspace
+          v-else-if="toolType === 'image'"
           :source="state.source"
-          :target="state.target"
-          :editor-theme="editorTheme"
-          :diff-editor-options="diffEditorOptions"
-          @mount="handleDiffMount"
-          @update:target="state.target = $event"
-          @cursor-change="cursorPosition = $event"
+          :preview-content="previewContent"
+          @update:source="state.source = $event"
         />
       </section>
     </div>
@@ -863,14 +1156,14 @@ function deepParseJson(obj: any): any {
     <input
       ref="sourceInput"
       type="file"
-      accept=".json,application/json,.txt"
+      :accept="toolType === 'image' ? 'image/*' : toolType === 'json' ? '.json,application/json' : '*/*'"
       class="hidden-input"
       @change="handleImport('source', $event)"
     />
     <input
       ref="targetInput"
       type="file"
-      accept=".json,application/json,.txt"
+      :accept="toolType === 'image' ? 'image/*' : toolType === 'json' ? '.json,application/json' : '*/*'"
       class="hidden-input"
       @change="handleImport('target', $event)"
     />

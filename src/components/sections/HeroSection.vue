@@ -3,10 +3,10 @@
     <div class="hero-background"></div>
     <div class="hero-inner">
       <div class="hero-content">
-        <span class="hero-badge">JSON 工具 · Byte JSON</span>
-        <h1 class="hero-title">为开发者打造的高效率 JSON 工具</h1>
+        <span class="hero-badge">在线工具 · Byte Tools</span>
+        <h1 class="hero-title">为开发者打造的多功能在线工具</h1>
         <p class="hero-subtitle">
-          Byte JSON 集成格式化、压缩、修复、对比与导入导出功能，基于 Monaco Editor 提供专业的代码编辑体验。支持本地存储，实时预览，让你高效处理 JSON 数据。
+          Byte Tools 集成文本、图片、JSON 三种工具模式，基于 Monaco Editor 提供专业的代码编辑体验。支持本地存储，实时预览，让你高效处理各种数据。
         </p>
         <div class="hero-actions">
           <RouterLink class="hero-action hero-action-primary" to="/">开始使用</RouterLink>
@@ -34,14 +34,14 @@
         <div class="hero-logo-card">
           <SiteLogo />
           <div class="hero-logo-info">
-            <p>Byte JSON</p>
-            <span>专业的 JSON 处理工具</span>
+            <p>Byte Tools</p>
+            <span>多功能在线工具</span>
           </div>
         </div>
         <div class="hero-screenshot-frame">
           <pre class="hero-code-preview"><code><span class="json-brace">{</span>
-  <span class="json-key">"name"</span>: <span class="json-string">"Byte JSON"</span>,
-  <span class="json-key">"description"</span>: <span class="json-string">"专业的 JSON 工具"</span>,
+  <span class="json-key">"name"</span>: <span class="json-string">"Byte Tools"</span>,
+  <span class="json-key">"description"</span>: <span class="json-string">"多功能在线工具"</span>,
   <span class="json-key">"features"</span>: <span class="json-brace">{</span>
     <span class="json-key">"format"</span>: <span class="json-string">"格式化 JSON 数据"</span>,
     <span class="json-key">"minify"</span>: <span class="json-string">"压缩为单行"</span>,

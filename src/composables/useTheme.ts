@@ -2,7 +2,7 @@ import { computed, onMounted, ref, watch } from 'vue'
 import type { ThemeMode } from '../types/jsonTools'
 
 const theme = ref<ThemeMode>('dark')
-const THEME_STORAGE_KEY = 'byte-json-theme'
+const THEME_STORAGE_KEY = 'byte-tools-theme'
 
 let initialized = false
 let watching = false

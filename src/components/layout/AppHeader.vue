@@ -4,8 +4,8 @@
       <RouterLink class="brand-link" to="/">
         <SiteLogo class="brand-logo" />
         <div class="brand-text">
-          <span class="brand-name">Byte JSON</span>
-          <span class="brand-subtitle">轻量 JSON 工具 · 专注体验</span>
+          <span class="brand-name">Byte Tools</span>
+          <span class="brand-subtitle">多功能在线工具 · 专注体验</span>
         </div>
       </RouterLink>
 

@@ -4,12 +4,12 @@
       <div class="footer-brand">
         <SiteLogo class="footer-logo" />
         <div class="footer-brand-text">
-          <p class="footer-brand-name">Byte JSON</p>
-          <p class="footer-brand-desc">在线 JSON 工具 · 让结构化数据处理更简单</p>
+          <p class="footer-brand-name">Byte Tools</p>
+          <p class="footer-brand-desc">多功能在线工具 · 让数据处理更简单</p>
         </div>
       </div>
       <div class="footer-meta">
-        <p>© {{ year }} Byte JSON. 保留所有权利。</p>
+        <p>© {{ year }} Byte Tools. 保留所有权利。</p>
         <p>
           <a href="https://github.com/antfl" target="_blank" rel="noreferrer">GitHub</a>
         </p>

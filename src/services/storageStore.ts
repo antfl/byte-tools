@@ -10,7 +10,7 @@ export type StoredSnippet = {
   size: number
 }
 
-const DB_NAME = 'byte-json-storage'
+const DB_NAME = 'byte-tools-storage'
 const STORE_NAME = 'snippets'
 const DB_VERSION = 1
 

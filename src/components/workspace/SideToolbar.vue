@@ -1,8 +1,12 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import IconButton from '../base/IconButton.vue'
+import type { ToolType } from '@/types/jsonTools'
+import type { IconButtonIcon } from '../base/IconButton.vue'
+import { getSidebarActions, type SidebarActionConfig } from '@/config/sidebarActions'
 
 const props = defineProps<{
+  toolType: ToolType
   mode: 'format' | 'diff'
   themeToggleTitle: string
   isDarkTheme: boolean
@@ -15,46 +19,58 @@ const emit = defineEmits<{
   (e: 'openAbout'): void
 }>()
 
-const isFormatMode = computed(() => props.mode === 'format')
-const themeIcon = computed(() => (props.isDarkTheme ? 'moon' : 'sun'))
+// 获取侧边栏操作按钮配置
+const sidebarGroups = computed(() => getSidebarActions(props.toolType, props.mode))
+
+function handleActionClick(action: SidebarActionConfig) {
+  if (!action.emit) return
+
+  if (action.emit === 'update:mode:format') {
+    emit('update:mode', 'format')
+  } else if (action.emit === 'update:mode:diff') {
+    emit('update:mode', 'diff')
+  } else if (action.emit === 'toggleTheme') {
+    emit('toggleTheme')
+  } else if (action.emit === 'openCacheManager') {
+    emit('openCacheManager')
+  } else if (action.emit === 'openAbout') {
+    emit('openAbout')
+  }
+}
+
+function getActionIcon(action: SidebarActionConfig): IconButtonIcon {
+  if (action.key === 'theme-toggle') {
+    return props.isDarkTheme ? 'moon' : 'sun'
+  }
+  return action.icon
+}
+
+function getActionTitle(action: SidebarActionConfig): string {
+  if (action.key === 'theme-toggle') {
+    return props.themeToggleTitle
+  }
+  return action.title
+}
+
+function isActionActive(action: SidebarActionConfig): boolean {
+  if (action.active) {
+    return action.active(props.mode, props.isDarkTheme) ?? false
+  }
+  return false
+}
 </script>
 
 <template>
   <aside class="side-toolbar">
     <div class="toolbar-section">
-      <div class="primary-group">
-        <div class="mode-switch">
-          <IconButton
-            icon="format"
-            :active="isFormatMode"
-            title="JSON 预览模式"
-            @click="emit('update:mode', 'format')"
-          />
-          <IconButton
-            icon="diff"
-            :active="!isFormatMode"
-            title="对比"
-            @click="emit('update:mode', 'diff')"
-          />
-        </div>
-
+      <div v-for="group in sidebarGroups" :key="group.name" :class="`${group.name}-group`">
         <IconButton
-          icon="storage"
-          title="缓存管理"
-          @click="emit('openCacheManager')"
-        />
-      </div>
-
-      <div class="utility-group">
-        <IconButton
-          icon="info"
-          title="了解 Byte JSON"
-          @click="emit('openAbout')"
-        />
-        <IconButton
-          :icon="themeIcon"
-          :title="themeToggleTitle"
-          @click="emit('toggleTheme')"
+          v-for="action in group.actions"
+          :key="action.key"
+          :icon="getActionIcon(action)"
+          :title="getActionTitle(action)"
+          :active="isActionActive(action)"
+          @click="handleActionClick(action)"
         />
       </div>
     </div>
@@ -92,13 +108,6 @@ const themeIcon = computed(() => (props.isDarkTheme ? 'moon' : 'sun'))
     align-items: center;
     gap: 12px;
   }
-
-  .mode-switch {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 12px;
-  }
 }
 
 @media (max-width: 960px) {
@@ -125,11 +134,6 @@ const themeIcon = computed(() => (props.isDarkTheme ? 'moon' : 'sun'))
       flex-direction: row;
       gap: 12px;
     }
-
-    .mode-switch {
-      flex-direction: row;
-    }
   }
 }
 </style>
-

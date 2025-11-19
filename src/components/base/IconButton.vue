@@ -14,12 +14,20 @@ type IconButtonIcon =
   | 'info'
   | 'auto'
   | 'deep'
+  | 'case'
+  | 'encode'
+  | 'decode'
+  | 'trim'
+  | 'stats'
 
 export type { IconButtonIcon }
 
 import autoIcon from '../../assets/icons/auto.svg?raw'
+import caseIcon from '../../assets/icons/case.svg?raw'
 import clearIcon from '../../assets/icons/clear.svg?raw'
+import decodeIcon from '../../assets/icons/decode.svg?raw'
 import diffIcon from '../../assets/icons/diff.svg?raw'
+import encodeIcon from '../../assets/icons/encode.svg?raw'
 import exportIcon from '../../assets/icons/export.svg?raw'
 import formatIcon from '../../assets/icons/format.svg?raw'
 import importIcon from '../../assets/icons/import.svg?raw'
@@ -31,6 +39,8 @@ import storageIcon from '../../assets/icons/storage.svg?raw'
 import sunIcon from '../../assets/icons/sun.svg?raw'
 import infoIcon from '../../assets/icons/info.svg?raw'
 import deepIcon from '../../assets/icons/deep.svg?raw'
+import trimIcon from '../../assets/icons/trim.svg?raw'
+import statsIcon from '../../assets/icons/stats.svg?raw'
 
 const props = withDefaults(
   defineProps<{
@@ -38,6 +48,7 @@ const props = withDefaults(
     title: string
     active?: boolean
     showLabel?: boolean
+    [key: string]: any // 允许传递任意属性
   }>(),
   {
     active: false,
@@ -51,8 +62,11 @@ const emit = defineEmits<{
 
 const ICON_MAP: Record<IconButtonIcon, string> = {
   auto: autoIcon,
+  case: caseIcon,
   clear: clearIcon,
+  decode: decodeIcon,
   diff: diffIcon,
+  encode: encodeIcon,
   export: exportIcon,
   format: formatIcon,
   import: importIcon,
@@ -63,7 +77,9 @@ const ICON_MAP: Record<IconButtonIcon, string> = {
   storage: storageIcon,
   sun: sunIcon,
   info: infoIcon,
-  deep: deepIcon
+  deep: deepIcon,
+  trim: trimIcon,
+  stats: statsIcon
 }
 
 const handleClick = () => {
@@ -77,6 +93,7 @@ const handleClick = () => {
     :class="['icon-button', { 'icon-button--active': props.active, 'icon-button--with-label': props.showLabel }]"
     :title="props.title"
     :aria-label="props.title"
+    v-bind="$attrs"
     @click="handleClick"
   >
     <span class="icon-button__icon" aria-hidden="true" v-html="ICON_MAP[props.icon]" />

@@ -3,7 +3,7 @@
     <img
       class="site-logo-image"
       src="@/assets/logo.svg"
-      alt="Byte JSON"
+      alt="Byte Tools"
       loading="lazy"
     />
   </figure>
