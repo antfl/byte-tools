@@ -309,7 +309,7 @@ function handleDiffMount(editor: MonacoEditorNS.IStandaloneDiffEditor) {
  * 处理打开关于页面
  */
 function handleOpenAbout() {
-  window.open('/product', '_blank')
+  window.open('/about', '_blank')
 }
 
 /**

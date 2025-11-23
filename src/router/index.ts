@@ -1,6 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 
-const HomeView = () => import('../views/HomeView.vue')
+const AboutView = () => import('../views/AboutView.vue')
 const WorkspaceView = () => import('../views/WorkspaceView.vue')
 
 const router = createRouter({
@@ -12,9 +12,9 @@ const router = createRouter({
       component: WorkspaceView
     },
     {
-      path: '/product',
-      name: 'product',
-      component: HomeView
+      path: '/about',
+      name: 'about',
+      component: AboutView
     },
     {
       path: '/:pathMatch(.*)*',

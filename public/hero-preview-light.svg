@@ -1,0 +1,81 @@
+<svg width="1200" height="600" viewBox="0 0 1200 600" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="1200" height="600" fill="#f8fafc"/>
+  
+  <!-- Left Section - Content Area -->
+  <g transform="translate(80, 100)">
+    <!-- Badge -->
+    <rect x="0" y="0" width="180" height="32" rx="16" fill="#eff6ff" stroke="#3b82f6" stroke-width="1"/>
+    <text x="90" y="22" font-family="system-ui, -apple-system" font-size="12" font-weight="600" fill="#3b82f6" text-anchor="middle" letter-spacing="0.1em">关于 BYTE TOOLS</text>
+    
+    <!-- Title -->
+    <text x="0" y="80" font-family="system-ui, -apple-system" font-size="48" font-weight="600" fill="#1e293b" letter-spacing="-0.02em">
+      一个简单实用的在线工具集
+    </text>
+    
+    <!-- Description -->
+    <text x="0" y="140" font-family="system-ui, -apple-system" font-size="18" fill="#64748b" line-height="1.8">
+      Byte Tools 是一个专注于 JSON、文本和图片处理的在线工具平台。
+    </text>
+    <text x="0" y="170" font-family="system-ui, -apple-system" font-size="18" fill="#64748b" line-height="1.8">
+      基于 Monaco Editor 提供代码编辑体验，支持本地存储，帮助开发者快速处理日常工作中的数据。
+    </text>
+    
+    <!-- Buttons -->
+    <g transform="translate(0, 240)">
+      <!-- Primary Button -->
+      <rect x="0" y="0" width="140" height="48" rx="12" fill="url(#gradient-blue)"/>
+      <text x="70" y="32" font-family="system-ui, -apple-system" font-size="16" font-weight="600" fill="white" text-anchor="middle">开始使用</text>
+      
+      <!-- Secondary Button -->
+      <rect x="160" y="0" width="140" height="48" rx="12" fill="white" stroke="#e2e8f0" stroke-width="1.5"/>
+      <text x="230" y="32" font-family="system-ui, -apple-system" font-size="16" font-weight="600" fill="#1e293b" text-anchor="middle">访问 Github</text>
+    </g>
+  </g>
+  
+  <!-- Right Section - Cards -->
+  <g transform="translate(700, 100)">
+    <!-- Logo Card -->
+    <rect x="0" y="0" width="400" height="120" rx="24" fill="white" stroke="#e2e8f0" stroke-width="1" opacity="0.9"/>
+    <rect x="24" y="24" width="72" height="72" rx="16" fill="#3b82f6"/>
+    <rect x="40" y="40" width="24" height="24" rx="4" fill="#fbbf24"/>
+    <rect x="64" y="64" width="24" height="24" rx="4" fill="white"/>
+    <text x="112" y="60" font-family="system-ui, -apple-system" font-size="20" font-weight="700" fill="#1e293b">Byte Tools</text>
+    <text x="112" y="85" font-family="system-ui, -apple-system" font-size="14" fill="#64748b">在线工具集</text>
+    
+    <!-- JSON Code Card -->
+    <rect x="0" y="140" width="400" height="360" rx="16" fill="white" stroke="#e2e8f0" stroke-width="1" opacity="0.9"/>
+    <g transform="translate(32, 180)">
+      <text x="0" y="0" font-family="'Fira Code', monospace" font-size="14" fill="#1e293b">{</text>
+      <text x="20" y="24" font-family="'Fira Code', monospace" font-size="14" fill="#3b82f6">"name"</text>
+      <text x="0" y="24" font-family="'Fira Code', monospace" font-size="14" fill="#1e293b">  </text>
+      <text x="0" y="24" font-family="'Fira Code', monospace" font-size="14" fill="#1e293b">: </text>
+      <text x="0" y="24" font-family="'Fira Code', monospace" font-size="14" fill="#f59e0b">"Byte Tools"</text>
+      <text x="0" y="24" font-family="'Fira Code', monospace" font-size="14" fill="#1e293b">,</text>
+      <text x="20" y="48" font-family="'Fira Code', monospace" font-size="14" fill="#3b82f6">"type"</text>
+      <text x="0" y="48" font-family="'Fira Code', monospace" font-size="14" fill="#1e293b">  </text>
+      <text x="0" y="48" font-family="'Fira Code', monospace" font-size="14" fill="#1e293b">: </text>
+      <text x="0" y="48" font-family="'Fira Code', monospace" font-size="14" fill="#f59e0b">"在线工具"</text>
+      <text x="0" y="48" font-family="'Fira Code', monospace" font-size="14" fill="#1e293b">,</text>
+      <text x="20" y="72" font-family="'Fira Code', monospace" font-size="14" fill="#3b82f6">"tools"</text>
+      <text x="0" y="72" font-family="'Fira Code', monospace" font-size="14" fill="#1e293b">  </text>
+      <text x="0" y="72" font-family="'Fira Code', monospace" font-size="14" fill="#1e293b">: [</text>
+      <text x="40" y="96" font-family="'Fira Code', monospace" font-size="14" fill="#f59e0b">"JSON 处理"</text>
+      <text x="0" y="96" font-family="'Fira Code', monospace" font-size="14" fill="#1e293b">,</text>
+      <text x="40" y="120" font-family="'Fira Code', monospace" font-size="14" fill="#f59e0b">"文本转换"</text>
+      <text x="0" y="120" font-family="'Fira Code', monospace" font-size="14" fill="#1e293b">,</text>
+      <text x="40" y="144" font-family="'Fira Code', monospace" font-size="14" fill="#f59e0b">"图片编辑"</text>
+      <text x="20" y="168" font-family="'Fira Code', monospace" font-size="14" fill="#1e293b">]</text>
+      <text x="0" y="168" font-family="'Fira Code', monospace" font-size="14" fill="#1e293b">}</text>
+    </g>
+  </g>
+  
+  <!-- Gradient Definition -->
+  <defs>
+    <linearGradient id="gradient-blue" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#3b82f6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#2563eb;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+</svg>
+
