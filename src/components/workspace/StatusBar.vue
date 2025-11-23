@@ -1,17 +1,27 @@
 <script setup lang="ts">
+/**
+ * 状态栏组件
+ * 显示编辑器状态信息，包括差异状态、消息、光标位置等
+ */
 import { computed } from 'vue'
 import type { DiffState, MessageLevel, PanelKey } from '../../types/jsonTools'
 
 type StatusMessage = { level: MessageLevel; text: string } | null
 
 const props = defineProps<{
+  /** 差异状态信息 */
   diffState: DiffState
+  /** 正在处理的面板 */
   busyPanel: PanelKey | null
+  /** 状态消息 */
   message: StatusMessage
+  /** 光标位置 */
   cursorPosition: { line: number; column: number } | null
+  /** 错误位置 */
   errorPosition: { line: number; column: number } | null
 }>()
 
+/** 根据状态计算状态点的样式类 */
 const dotClass = computed(() => {
   if (!props.diffState.ok) {
     return 'error'
@@ -21,13 +31,21 @@ const dotClass = computed(() => {
   }
   return 'ok'
 })
+
+/** 将状态消息按分隔符拆分为多个部分 */
+const messageParts = computed(() => {
+  if (!props.diffState.message) return []
+  return props.diffState.message.split(' | ').filter(part => part.trim())
+})
 </script>
 
 <template>
   <footer class="status-bar">
     <div class="status-left">
       <span class="dot" :class="dotClass" />
-      <span>{{ diffState.message }}</span>
+      <template v-for="(part, index) in messageParts" :key="index">
+        <span class="message-part">{{ part }}</span>
+      </template>
       <span v-if="errorPosition" class="error-info">
         错误位置：第 {{ errorPosition.line }} 行，第 {{ errorPosition.column }} 列
       </span>
@@ -59,22 +77,18 @@ const dotClass = computed(() => {
 .status-right {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 16px;
   font-size: 11px;
   color: var(--text-muted);
 }
 
 .error-info {
-  margin-left: 12px;
-  padding-left: 12px;
-  border-left: 1px solid var(--border-subtle);
+  margin-left: 16px;
   color: var(--status-error);
 }
 
 .cursor-info {
-  margin-left: 12px;
-  padding-left: 12px;
-  border-left: 1px solid var(--border-subtle);
+  margin-left: 16px;
   color: var(--text-secondary);
 }
 
@@ -103,7 +117,7 @@ const dotClass = computed(() => {
 
 .message {
   &.success {
-    color: #22c55e;
+    color: var(--color-brand);
   }
 
   &.error {

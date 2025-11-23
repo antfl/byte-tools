@@ -1,50 +1,77 @@
 <script setup lang="ts">
-import { computed, ref, onMounted, onUnmounted, provide } from 'vue'
+/**
+ * 顶部工具栏组件
+ * 提供工具切换、操作按钮等功能
+ */
+import { computed, ref, onMounted, onUnmounted, provide, watch } from 'vue'
 import SvgIcon from '../base/SvgIcon.vue'
 import Logo from '../../assets/logo.svg'
 import ToolActionButton from './ToolActionButton.vue'
 import JsonToggleButtons from './JsonToggleButtons.vue'
-import type { ToolAction, ToolType } from '@/types/jsonTools'
+import type { ToolAction, ToolType, PanelKey } from '@/types/jsonTools'
 import { getToolActionGroups } from '@/config/toolActions'
 import type { ToolActionPayload } from '@/types/actions'
 
 const props = defineProps<{
+  /** 当前工具类型 */
   toolType: ToolType
+  /** 工作模式：format 或 diff */
   mode: 'format' | 'diff'
+  /** 当前活动的工具 */
   activeTool: ToolAction | null
+  /** 是否自动格式化（JSON 工具） */
   autoFormat?: boolean
+  /** 是否深度解析（JSON 工具） */
   deepParse?: boolean
+  /** 图片信息 */
   imageInfo?: { width: number; height: number } | null
+  /** 是否可以撤销 */
   canUndo?: boolean
+  /** 是否可以重做 */
   canRedo?: boolean
+  /** 正在处理的面板 */
+  busyPanel?: PanelKey | null
 }>()
 
 const emit = defineEmits<{
+  /** 触发操作 */
   (e: 'action', payload: ToolActionPayload): void
+  /** 更新工具类型 */
   (e: 'update:toolType', toolType: ToolType): void
 }>()
 
+/** 工具下拉菜单是否可见 */
 const dropdownVisible = ref(false)
+/** 下拉菜单容器引用 */
 const dropdownRef = ref<HTMLDivElement | null>(null)
 
+/** 工具类型标签映射 */
 const toolLabels: Record<ToolType, string> = {
   text: '文本',
   image: '图片',
   json: 'JSON'
 }
 
+/** 工具类型描述映射 */
 const toolDescriptions: Record<ToolType, string> = {
   text: '纯文本编辑器，支持文本处理和预览',
   image: '图片查看和编辑工具',
   json: 'JSON 格式化、压缩、修复和对比'
 }
 
+/** 可用工具列表 */
 const tools: ToolType[] = ['text', 'image', 'json']
 
+/** 根据工具类型和模式获取操作组 */
 const actionGroups = computed(() => getToolActionGroups(props.toolType, props.mode))
 
+/** 当前打开的按钮 ID（用于管理下拉菜单状态） */
 const openButtonId = ref<symbol | null>(null)
 
+/**
+ * 设置当前打开的按钮 ID
+ * @param id - 按钮 ID
+ */
 function setOpenButton(id: symbol | null) {
   openButtonId.value = id
 }
@@ -52,15 +79,34 @@ function setOpenButton(id: symbol | null) {
 provide('openButtonId', openButtonId)
 provide('setOpenButton', setOpenButton)
 
+// 当面板忙碌时，关闭下拉菜单
+watch(() => props.busyPanel, (busyPanel) => {
+  if (busyPanel !== null) {
+    setOpenButton(null)
+    dropdownVisible.value = false
+  }
+})
+
+/**
+ * 处理工具选择
+ * @param tool - 选中的工具类型
+ */
 function handleToolSelect(tool: ToolType) {
   emit('update:toolType', tool)
   dropdownVisible.value = false
 }
 
+/**
+ * 切换工具下拉菜单显示状态
+ */
 function toggleDropdown() {
   dropdownVisible.value = !dropdownVisible.value
 }
 
+/**
+ * 处理点击外部区域，关闭下拉菜单
+ * @param event - 鼠标事件
+ */
 function handleClickOutside(event: MouseEvent) {
   if (dropdownRef.value && !dropdownRef.value.contains(event.target as Node)) {
     dropdownVisible.value = false

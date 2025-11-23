@@ -1,5 +1,7 @@
 /**
- * 图标名称映射表：将旧的图标名称映射到 Lucide 图标组件
+ * 图标名称映射表
+ * 将图标名称映射到 Lucide Vue 图标组件
+ * 用于统一管理项目中使用的所有图标
  */
 import type { Component } from 'vue'
 import {
@@ -35,9 +37,11 @@ import {
   Undo2,
   Redo2,
   ExternalLink,
-  Monitor
+  Monitor,
+  Copy
 } from 'lucide-vue-next'
 
+/** 图标名称类型定义 */
 export type IconName =
   | 'import'
   | 'save'
@@ -72,7 +76,9 @@ export type IconName =
   | 'auto'
   | 'deep'
   | 'monitor'
+  | 'copy'
 
+/** 图标名称到组件的映射表 */
 export const iconMap: Record<IconName, Component> = {
   import: Upload,
   save: Save,
@@ -106,6 +112,7 @@ export const iconMap: Record<IconName, Component> = {
   diff: GitCompare,
   auto: Sparkles,
   deep: Layers,
-  monitor: Monitor
+  monitor: Monitor,
+  copy: Copy
 }
 

@@ -1,4 +1,8 @@
 <script setup lang="ts">
+/**
+ * 工作区视图组件
+ * 主工作区视图，整合所有工具和编辑器组件
+ */
 import { computed, onMounted, ref, watch } from 'vue'
 import { createDefaultOptions } from 'monaco-editor-vue3'
 import type { editor as MonacoEditorNS } from 'monaco-editor'
@@ -18,22 +22,69 @@ import { useTheme } from '../composables/useTheme'
 import { useJsonOperations } from '../composables/useJsonOperations'
 import { useActionHandler } from '../composables/useActionHandler'
 import type { PanelKey } from '../types/jsonTools'
+import { formatFileSize } from '@/utils/imageTools'
+import type { ImageInfo } from '@/utils/imageTools'
 
 const { effectiveTheme } = useTheme()
 const store = useWorkspaceStore()
 const jsonOps = useJsonOperations()
 const { handleAction, fileOps, cacheManager } = useActionHandler()
 
+/** 计算状态栏显示的状态信息 */
+const statusState = computed(() => {
+  if (store.toolType === 'image') {
+    if (store.currentImageInfo) {
+      return {
+        ok: true,
+        hasDiff: false,
+        message: `尺寸: ${store.currentImageInfo.width} × ${store.currentImageInfo.height} px | 大小: ${formatFileSize(store.currentImageInfo.size)} | 格式: ${store.currentImageInfo.format.toUpperCase()}`
+      }
+    } else if (store.source && store.source.startsWith('data:image/')) {
+      return {
+        ok: true,
+        hasDiff: false,
+        message: '图片已加载'
+      }
+    } else {
+      return {
+        ok: false,
+        hasDiff: false,
+        message: '请导入图片'
+      }
+    }
+  } else if (store.toolType === 'text') {
+    const length = store.source.length
+    const lines = store.source.split('\n').length
+    return {
+      ok: true,
+      hasDiff: false,
+      message: `字符数: ${length} | 行数: ${lines}`
+    }
+  } else {
+    return jsonOps.diffState.value
+  }
+})
+
+/** 编辑器主题名称 */
 const editorTheme = computed(() => `byte-tools-${effectiveTheme.value}`)
+/** 差异编辑器实例 */
 const diffInstance = ref<MonacoEditorNS.IStandaloneDiffEditor | null>(null)
+/** 源编辑器实例 */
 const sourceEditorInstance = ref<MonacoEditorNS.IStandaloneCodeEditor | null>(null)
+/** 图片工作区组件引用 */
 const imageWorkspaceRef = ref<InstanceType<typeof ImageWorkspace> | null>(null)
 
+/** 导入选项模态框状态 */
 const importOptions = ref({
   visible: false,
   panel: 'source' as PanelKey
 })
 
+/**
+ * 根据工具类型获取编辑器语言
+ * @param tool - 工具类型
+ * @returns 编辑器语言标识
+ */
 function getEditorLanguage(tool: typeof store.toolType): string {
   switch (tool) {
     case 'json':
@@ -47,6 +98,7 @@ function getEditorLanguage(tool: typeof store.toolType): string {
   }
 }
 
+/** 基础编辑器配置选项 */
 const baseEditorOptions = computed(() => {
   const options = createDefaultOptions(getEditorLanguage(store.toolType))
   return {
@@ -70,6 +122,7 @@ const baseEditorOptions = computed(() => {
   }
 })
 
+/** 源编辑器配置选项 */
 const sourceEditorOptions = computed(() => ({
   ...baseEditorOptions.value,
   readOnly: false,
@@ -77,11 +130,13 @@ const sourceEditorOptions = computed(() => ({
   formatOnType: store.toolType === 'json' ? store.autoFormat : false
 }))
 
+/** 预览编辑器配置选项 */
 const previewEditorOptions = computed(() => ({
   ...baseEditorOptions.value,
   readOnly: true
 }))
 
+/** 差异编辑器配置选项 */
 const diffEditorOptions = computed<MonacoEditorNS.IStandaloneDiffEditorConstructionOptions>(() => ({
   ...baseEditorOptions.value,
   automaticLayout: true,
@@ -89,10 +144,9 @@ const diffEditorOptions = computed<MonacoEditorNS.IStandaloneDiffEditorConstruct
   renderSideBySide: true,
   originalEditable: true,
   diffAlgorithm: 'advanced',
-  readOnly: false
-}))
+    readOnly: false
+  }))
 
-// Monaco 主题配置
 monaco.editor.defineTheme('byte-tools-dark', {
   base: 'vs-dark',
   inherit: true,
@@ -108,11 +162,11 @@ monaco.editor.defineTheme('byte-tools-dark', {
     'editor.background': '#2b2d30',
     'editor.foreground': '#f1f5f9',
     'editorCursor.foreground': '#5b8def',
-    'editor.lineHighlightBackground': '#35373b',
+    'editor.lineHighlightBackground': '#3a3c42',
     'editorLineNumber.foreground': '#8a9099',
     'editorLineNumber.activeForeground': '#f1f5f9',
-    'editor.selectionBackground': '#3a3c4240',
-    'editor.inactiveSelectionBackground': '#3a3c4226',
+    'editor.selectionBackground': '#4a4d54',
+    'editor.inactiveSelectionBackground': '#3a3c4266',
     'editorWidget.background': '#313338',
     'editorSuggestWidget.background': '#313338',
     'scrollbarSlider.background': '#4a4d54aa',
@@ -138,11 +192,11 @@ monaco.editor.defineTheme('byte-tools-light', {
     'editor.background': '#ffffff',
     'editor.foreground': '#1e293b',
     'editorCursor.foreground': '#2b6efa',
-    'editor.lineHighlightBackground': '#e2e8f0',
+    'editor.lineHighlightBackground': '#f1f5f9',
     'editorLineNumber.foreground': '#94a3b8',
     'editorLineNumber.activeForeground': '#1e293b',
-    'editor.selectionBackground': '#cbd5f51f',
-    'editor.inactiveSelectionBackground': '#cbd5f550',
+    'editor.selectionBackground': '#cbd5f5',
+    'editor.inactiveSelectionBackground': '#e2e8f0',
     'editorWidget.background': '#f8fafc',
     'editorSuggestWidget.background': '#f8fafc',
     'scrollbarSlider.background': '#cbd5f580',
@@ -172,7 +226,6 @@ watch(
   }
 )
 
-// 更新编辑器实例的自动格式化选项
 watch(
   () => store.autoFormat,
   (autoFormat) => {
@@ -185,11 +238,16 @@ watch(
   }
 )
 
+/** 模型补丁标志，用于标记已补丁的模型 */
 const MODEL_PATCH_FLAG = '__byteJsonPatchedSetValue__'
 type PatchedTextModel = monaco.editor.ITextModel & {
   __byteJsonPatchedSetValue__?: boolean
 }
 
+/**
+ * 为模型打补丁，避免相同值的重复设置
+ * @param model - Monaco 编辑器文本模型
+ */
 function patchModelSetValue(model: monaco.editor.ITextModel | null) {
   if (!model) {
     return
@@ -208,6 +266,10 @@ function patchModelSetValue(model: monaco.editor.ITextModel | null) {
   }) as typeof model.setValue
 }
 
+/**
+ * 处理差异编辑器挂载
+ * @param editor - 差异编辑器实例
+ */
 function handleDiffMount(editor: MonacoEditorNS.IStandaloneDiffEditor) {
   diffInstance.value = editor
   const originalEditor = editor.getOriginalEditor()
@@ -243,32 +305,94 @@ function handleDiffMount(editor: MonacoEditorNS.IStandaloneDiffEditor) {
   }
 }
 
+/**
+ * 处理打开关于页面
+ */
 function handleOpenAbout() {
   window.open('/product', '_blank')
 }
 
+/**
+ * 触发导入操作
+ * @param panel - 目标面板
+ */
 function triggerImport(panel: PanelKey) {
   importOptions.value.panel = panel
   importOptions.value.visible = true
 }
 
+/**
+ * 开始文件导入
+ * @param panel - 目标面板
+ */
 function startFileImport(panel: PanelKey) {
-  const input = panel === 'source' ? fileOps.sourceInput.value : fileOps.targetInput.value
-  input?.click()
-  store.setActiveTool(`${panel}-import`)
   importOptions.value.visible = false
+  
+  setTimeout(() => {
+    const input = panel === 'source' ? fileOps.sourceInput.value : fileOps.targetInput.value
+    if (!input) {
+      console.error('文件输入框引用不存在', { 
+        panel, 
+        sourceInput: fileOps.sourceInput, 
+        targetInput: fileOps.targetInput,
+        sourceInputValue: fileOps.sourceInput?.value,
+        targetInputValue: fileOps.targetInput?.value
+      })
+      return
+    }
+    
+    try {
+      input.value = ''
+      
+      if (!input.isConnected) {
+        console.error('文件输入框未连接到 DOM')
+        if (!document.body.contains(input)) {
+          console.error('文件输入框不在 DOM 中，尝试重新添加')
+          return
+        }
+      }
+      
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          input.click()
+          store.setActiveTool(`${panel}-import`)
+        })
+      })
+    } catch (error) {
+      console.error('触发文件选择失败:', error)
+    }
+  }, 300)
 }
 
-function handleImageInfo(info: { width: number; height: number } | null) {
-  store.setCurrentImageInfo(info)
+/**
+ * 处理图片信息更新
+ * @param info - 图片信息
+ */
+function handleImageInfo(info: ImageInfo | null) {
+  if (info) {
+    store.setCurrentImageInfo({
+      width: info.width,
+      height: info.height,
+      size: info.size,
+      format: info.format
+    })
+  } else {
+    store.setCurrentImageInfo(null)
+  }
 }
 
-// 处理导入操作
+/**
+ * 处理导入操作
+ * @param panel - 目标面板
+ */
 function handleImportAction(panel: PanelKey) {
   triggerImport(panel)
 }
 
-// 包装 handleAction 以处理导入
+/**
+ * 操作处理包装器，处理特殊的导入操作
+ * @param payload - 操作载荷
+ */
 function handleActionWrapper(payload: Parameters<typeof handleAction>[0]) {
   if (payload.action === 'triggerImport' && payload.panel) {
     handleImportAction(payload.panel)
@@ -289,6 +413,7 @@ function handleActionWrapper(payload: Parameters<typeof handleAction>[0]) {
       :image-info="store.currentImageInfo"
       :can-undo="store.canUndo"
       :can-redo="store.canRedo"
+      :busy-panel="store.busyPanel"
       @action="handleActionWrapper"
       @update:tool-type="store.setToolType"
     />
@@ -302,7 +427,7 @@ function handleActionWrapper(payload: Parameters<typeof handleAction>[0]) {
         @open-about="handleOpenAbout"
       />
 
-      <section class="workspace" :class="{ 'is-diff': store.mode === 'diff' && store.toolType === 'json' }">
+      <section class="workspace" :class="{ 'is-diff': store.mode === 'diff' && store.toolType === 'json', 'is-image': store.toolType === 'image' }">
         <template v-if="store.toolType === 'json'">
           <JsonWorkspace
             v-if="store.mode === 'format'"
@@ -351,11 +476,11 @@ function handleActionWrapper(payload: Parameters<typeof handleAction>[0]) {
     </div>
 
     <StatusBar
-      :diff-state="jsonOps.diffState.value"
+      :diff-state="statusState"
       :busy-panel="store.busyPanel"
       :message="store.message"
-      :cursor-position="store.cursorPosition"
-      :error-position="store.mode === 'format' && !store.previewIsValid ? store.errorPosition : null"
+      :cursor-position="(store.toolType === 'json' || store.toolType === 'text') ? store.cursorPosition : null"
+      :error-position="store.mode === 'format' && !store.previewIsValid && store.toolType === 'json' ? store.errorPosition : null"
     />
 
     <input
@@ -438,10 +563,22 @@ function handleActionWrapper(payload: Parameters<typeof handleAction>[0]) {
     &.is-diff {
       grid-template-columns: 1fr;
     }
+
+    &.is-image {
+      grid-template-columns: 1fr 1fr;
+    }
   }
 
   .hidden-input {
-    display: none;
+    position: fixed;
+    top: -9999px;
+    left: -9999px;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    pointer-events: none;
+    overflow: hidden;
+    z-index: -1;
   }
 }
 

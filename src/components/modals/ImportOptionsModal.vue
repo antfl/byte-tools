@@ -1,20 +1,72 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+/**
+ * 导入选项模态框组件
+ * 提供文件上传和缓存读取两种导入方式的选择界面
+ */
+import { computed, ref } from 'vue'
 import type { PanelKey } from '@/types/jsonTools.ts'
+import { useWorkspaceStore } from '@/stores/workspace'
+import { useFileOperations } from '@/composables/useFileOperations'
 
 const props = defineProps<{
+  /** 是否显示模态框 */
   visible: boolean
+  /** 目标面板：source 或 target */
   panel: PanelKey
 }>()
 
 const emit = defineEmits<{
+  /** 关闭模态框 */
   (e: 'close'): void
+  /** 选择文件导入 */
   (e: 'select-file'): void
+  /** 选择从缓存读取 */
   (e: 'select-cache'): void
 }>()
 
+const store = useWorkspaceStore()
+const fileOps = useFileOperations()
+
+/** 面板标签文本 */
 const panelLabel = computed(() => (props.panel === 'source' ? '源面板' : '目标面板'))
 
+/** 根据工具类型生成上传描述文本 */
+const uploadDescription = computed(() => {
+  switch (store.toolType) {
+    case 'image':
+      return '选择本地图片文件后立即导入'
+    case 'json':
+      return '选择本地 JSON 文件后立即导入'
+    case 'text':
+      return '选择本地文本文件后立即导入'
+    default:
+      return '选择本地文件后立即导入'
+  }
+})
+
+const fileInputRef = ref<HTMLInputElement | null>(null)
+
+/**
+ * 处理文件选择事件
+ * @param event - 文件输入框的 change 事件
+ */
+function handleFileSelect(event: Event) {
+  const input = event.target as HTMLInputElement
+  const fileList = input.files
+  if (!fileList || fileList.length === 0) {
+    input.value = ''
+    return
+  }
+  
+  emit('close')
+  fileOps.handleImport(props.panel, event as any)
+  input.value = ''
+}
+
+/**
+ * 处理键盘事件，支持 ESC 键关闭模态框
+ * @param event - 键盘事件
+ */
 function handleKeydown(event: KeyboardEvent) {
   if (event.key === 'Escape') {
     event.preventDefault()
@@ -43,11 +95,18 @@ function handleKeydown(event: KeyboardEvent) {
         </header>
 
         <div class="modal-card__grid">
-          <button type="button" class="option-card" @click="emit('select-file')">
+          <label class="option-card upload-label" @click.stop>
             <div class="option-card__icon option-card__icon--upload" aria-hidden="true">⬆️</div>
             <h3>上传文件</h3>
-            <p>选择本地 JSON 或文本文件后立即导入</p>
-          </button>
+            <p>{{ uploadDescription }}</p>
+            <input
+              ref="fileInputRef"
+              type="file"
+              :accept="store.toolType === 'image' ? 'image/*' : store.toolType === 'json' ? '.json,application/json' : '*/*'"
+              class="file-input-hidden"
+              @change="handleFileSelect"
+            />
+          </label>
 
           <button type="button" class="option-card" @click="emit('select-cache')">
             <div class="option-card__icon option-card__icon--library" aria-hidden="true">📚</div>
@@ -129,6 +188,7 @@ function handleKeydown(event: KeyboardEvent) {
   text-align: left;
   cursor: pointer;
   transition: transform 0.2s ease, border 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+  position: relative;
 
   h3 {
     margin: 0;
@@ -172,6 +232,21 @@ function handleKeydown(event: KeyboardEvent) {
   &--upload {
     background: rgba(59, 130, 246, 0.12);
   }
+}
+
+.upload-label {
+  margin: 0;
+}
+
+.file-input-hidden {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+  z-index: 1;
 }
 
 .modal-card__footer {

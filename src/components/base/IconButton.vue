@@ -84,12 +84,18 @@ const handleClick = () => {
   &--with-label {
     width: auto;
     height: var(--icon-button-size);
-    gap: 0;
+    padding: 0 8px;
+    gap: 6px;
 
     .icon-button__icon {
       width: 18px;
       height: 18px;
       transform: scale(1);
+      flex-shrink: 0;
+    }
+    
+    .icon-button__label {
+      margin-left: 0;
     }
   }
 
