@@ -41,7 +41,7 @@ import { useTheme } from "@/composables/useTheme";
 import type { ThemeMode } from "@/types/jsonTools";
 import type { IconButtonIcon } from "./IconButton.vue";
 
-const props = withDefaults(
+withDefaults(
   defineProps<{
     variant?: 'icon' | 'button'
   }>(),
