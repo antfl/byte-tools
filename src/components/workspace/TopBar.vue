@@ -76,7 +76,7 @@ onUnmounted(() => {
       <div class="tool-select-wrapper" ref="dropdownRef">
         <button class="tool-switch-button" @click="toggleDropdown" :title="`当前工具: ${toolLabels[toolType]}`">
           <span class="tool-switch-label">{{ toolLabels[toolType] }}</span>
-          <SvgIcon name="chevron-down" :class="['tool-switch-icon', { 'tool-switch-icon--open': dropdownVisible }]" />
+          <SvgIcon name="chevron-down" :class="['tool-switch-icon', { 'tool-switch-icon--open': dropdownVisible }]" :size="16" />
         </button>
         <Transition name="dropdown">
           <div v-if="dropdownVisible" class="tool-dropdown">
@@ -89,7 +89,7 @@ onUnmounted(() => {
               <div class="tool-dropdown-content">
                 <div class="tool-dropdown-header">
                   <span class="tool-dropdown-label">{{ toolLabels[tool] }}</span>
-                  <SvgIcon v-if="toolType === tool" name="check" class="tool-dropdown-check" />
+                  <SvgIcon v-if="toolType === tool" name="check" class="tool-dropdown-check" :size="16" />
                 </div>
                 <p class="tool-dropdown-description">{{ toolDescriptions[tool] }}</p>
               </div>

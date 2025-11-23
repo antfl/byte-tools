@@ -1,10 +1,5 @@
 /// <reference types="vite/client" />
 
-declare module 'virtual:svg-icons-register' {
-  const content: any
-  export default content
-}
-
 declare module 'monaco-editor/esm/vs/editor/editor.worker?worker' {
   export default class EditorWorker extends Worker {
     constructor()

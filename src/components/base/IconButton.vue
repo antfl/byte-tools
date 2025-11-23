@@ -35,7 +35,7 @@ const handleClick = () => {
     v-bind="$attrs"
     @click="handleClick"
   >
-    <SvgIcon :name="props.icon" class="icon-button__icon" aria-hidden="true" />
+    <SvgIcon :name="props.icon" class="icon-button__icon" :size="18" aria-hidden="true" />
     <span v-if="props.showLabel" class="icon-button__label">{{ props.title }}</span>
   </button>
 </template>

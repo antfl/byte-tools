@@ -68,7 +68,7 @@ onMounted(() => {
   <div class="image-workspace">
     <div v-if="!props.source || !props.source.startsWith('data:image/')" class="image-placeholder">
       <div class="placeholder-content">
-        <SvgIcon name="import" class="placeholder-icon" />
+        <SvgIcon name="import" class="placeholder-icon" :size="64" />
         <p class="placeholder-text">请导入图片开始编辑</p>
         <p class="placeholder-hint">支持 JPG、PNG、WebP 等格式</p>
       </div>
