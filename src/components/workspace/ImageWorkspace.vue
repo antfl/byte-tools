@@ -7,13 +7,11 @@ import { ref, computed, watch, onMounted } from 'vue'
 import SvgIcon from '../base/SvgIcon.vue'
 import {
   getImageInfo,
-  formatFileSize,
   type ImageInfo
 } from '@/utils/imageTools'
 import { IMAGE_CONSTANTS } from '@/constants'
 import { useWorkspaceStore } from '@/stores/workspace'
 import { useMessage } from '@/composables/useMessage'
-import { useImageOperations } from '@/composables/useImageOperations'
 import { convertImageFormat, resizeImage } from '@/utils/imageTools'
 import { ImageFormat } from '@/types/enums'
 
@@ -33,7 +31,6 @@ const emit = defineEmits<{
 
 const store = useWorkspaceStore()
 const { showSuccess, showError } = useMessage()
-const { convert } = useImageOperations()
 
 /** 图片信息 */
 const imageInfo = ref<ImageInfo | null>(null)

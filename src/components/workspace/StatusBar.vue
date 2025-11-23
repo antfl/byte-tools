@@ -43,7 +43,7 @@ const messageParts = computed(() => {
   <footer class="status-bar">
     <div class="status-left">
       <span class="dot" :class="dotClass" />
-      <template v-for="(part, index) in messageParts" :key="index">
+      <template v-for="(part, _index) in messageParts" :key="_index">
         <span class="message-part">{{ part }}</span>
       </template>
       <span v-if="errorPosition" class="error-info">
