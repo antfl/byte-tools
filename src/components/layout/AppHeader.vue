@@ -32,7 +32,6 @@
 
       <div class="header-actions">
         <ThemeToggle />
-        <RouterLink class="launch-button" to="/">开始使用</RouterLink>
       </div>
     </div>
   </header>
@@ -205,34 +204,9 @@ const headerOpacity = computed(() => {
   gap: 0.9rem;
 }
 
-.launch-button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 999px;
-  padding: 0.4rem 0.85rem;
-  font-weight: 400;
-  font-size: 0.9rem;
-  text-decoration: none;
-  color: var(--brand-primary);
-  background: color-mix(in srgb, var(--brand-primary) 15%, transparent);
-  border: 1.5px solid var(--brand-primary);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.launch-button:hover {
-  transform: translateY(-1px);
-  background: color-mix(in srgb, var(--brand-primary) 10%, transparent);
-  box-shadow: 0 8px 24px color-mix(in srgb, var(--brand-primary) 15%, transparent);
-}
-
 @media (max-width: 980px) {
   .app-nav {
     display: none;
-  }
-
-  .launch-button {
-    padding: 0.4rem 0.85rem;
   }
 }
 

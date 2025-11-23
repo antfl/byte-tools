@@ -132,15 +132,16 @@ const { effectiveTheme } = useTheme();
   margin: 0 auto;
   padding: 0 1.75rem;
   display: grid;
-  grid-template-columns: 1fr 1.3fr;
-  gap: clamp(4rem, 8vw, 7rem);
-  align-items: center;
+  grid-template-columns: 1fr;
+  gap: 4rem;
+  text-align: center;
 }
 
 .about-hero-content {
   display: grid;
   gap: 2.75rem;
   max-width: 100%;
+  margin: 0 auto;
 }
 
 .about-hero-title-section {
@@ -199,6 +200,7 @@ const { effectiveTheme } = useTheme();
   flex-wrap: wrap;
   gap: 1rem;
   align-items: center;
+  justify-content: center;
   margin-top: 0.5rem;
 }
 
@@ -274,7 +276,7 @@ const { effectiveTheme } = useTheme();
   display: flex;
   flex-direction: column;
   gap: 2rem;
-  align-items: flex-start;
+  align-items: center;
   justify-content: flex-start;
   width: 100%;
 }
@@ -289,6 +291,7 @@ const { effectiveTheme } = useTheme();
   line-height: 1.7;
   color: var(--text-secondary);
   font-weight: 400;
+  text-align: center;
 }
 
 .about-hero-preview-wrapper {
@@ -334,32 +337,11 @@ const { effectiveTheme } = useTheme();
   }
 
   .about-hero-inner {
-    grid-template-columns: 1fr;
-    gap: 4rem;
-    text-align: center;
+    gap: 3.5rem;
   }
 
   .about-hero-content {
-    max-width: 100%;
-    margin: 0 auto;
     gap: 2.25rem;
-  }
-
-  .about-hero-text {
-    max-width: 100%;
-  }
-
-  .about-hero-actions {
-    justify-content: center;
-  }
-
-  .about-hero-visual {
-    padding-top: 1.5rem;
-    align-items: center;
-  }
-
-  .about-hero-visual-text {
-    text-align: center;
   }
 
   .about-hero-gradient-orb-1,

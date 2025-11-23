@@ -136,6 +136,29 @@ onUnmounted(() => {
   position: relative;
   display: inline-block;
 }
+
+.theme-toggle-wrapper :deep(.icon-button) {
+  width: auto;
+  height: auto;
+  padding: 0.4rem 0.85rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--brand-primary) 15%, transparent);
+  border: 1.5px solid var(--brand-primary);
+  color: var(--brand-primary);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.theme-toggle-wrapper :deep(.icon-button:hover) {
+  transform: translateY(-1px);
+  background: color-mix(in srgb, var(--brand-primary) 10%, transparent);
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--brand-primary) 15%, transparent);
+}
+
+.theme-toggle-wrapper :deep(.icon-button__icon) {
+  width: 18px;
+  height: 18px;
+  transform: scale(1);
+}
 </style>
 
 <style>
