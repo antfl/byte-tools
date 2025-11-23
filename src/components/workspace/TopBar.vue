@@ -193,7 +193,6 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 0 8px;
 }
 
 .logo-container {

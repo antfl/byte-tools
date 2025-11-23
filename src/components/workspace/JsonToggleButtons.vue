@@ -42,13 +42,13 @@ function handleToggleDeepParse() {
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 1px;
-  border-radius: var(--radius-base);
-  background: var(--surface-toolbar);
-  transition: background-color 0.2s ease;
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+  transition: none;
 
   &:hover {
-    background-color: color-mix(in srgb, var(--surface-toolbar) 100%, var(--color-brand) 8%);
+    background-color: transparent;
   }
 }
 </style>

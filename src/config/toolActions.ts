@@ -137,28 +137,35 @@ const TEXT_ACTIONS: ActionConfig[] = [
 
 const CLEAR_ACTION: ActionConfig = { key: 'clear', icon: 'clear', title: '清空' }
 
-const IMAGE_ACTIONS: ActionConfig[] = [
+// 图片操作分组
+const IMAGE_HISTORY_ACTIONS: ActionConfig[] = [
   { key: 'undo', icon: 'undo', title: '撤销' },
-  { key: 'redo', icon: 'redo', title: '重做' },
-  { key: 'compress', icon: 'compress', title: '压缩' },
+  { key: 'redo', icon: 'redo', title: '重做' }
+]
+
+const IMAGE_EDIT_ACTIONS: ActionConfig[] = [
   { key: 'resize', icon: 'resize', title: '调整尺寸' },
   { key: 'crop', icon: 'crop', title: '裁剪' },
   { key: 'rotate', icon: 'rotate', title: '旋转' },
-  { key: 'flip', icon: 'flip', title: '翻转' },
-      {
-        key: 'convert',
-        icon: 'convert',
-        title: '转换格式',
-        hasSubmenu: true,
-        submenuItems: [
-          { label: 'PNG', value: 'png' },
-          { label: 'JPG', value: 'jpg' },
-          { label: 'WebP', value: 'webp' },
-          { label: 'ICO', value: 'ico' },
-          { label: 'SVG', value: 'svg' },
-          { label: 'Base64', value: 'base64' }
-        ]
-      },
+  { key: 'flip', icon: 'flip', title: '翻转' }
+]
+
+const IMAGE_PROCESS_ACTIONS: ActionConfig[] = [
+  { key: 'compress', icon: 'compress', title: '压缩' },
+  {
+    key: 'convert',
+    icon: 'convert',
+    title: '转换格式',
+    hasSubmenu: true,
+    submenuItems: [
+      { label: 'PNG', value: 'png' },
+      { label: 'JPG', value: 'jpg' },
+      { label: 'WebP', value: 'webp' },
+      { label: 'ICO', value: 'ico' },
+      { label: 'SVG', value: 'svg' },
+      { label: 'Base64', value: 'base64' }
+    ]
+  },
   {
     key: 'filter',
     icon: 'filter',
@@ -171,7 +178,10 @@ const IMAGE_ACTIONS: ActionConfig[] = [
       { label: '模糊', value: 'blur' }
     ]
   },
-  { key: 'adjust', icon: 'info', title: '调整' },
+  { key: 'adjust', icon: 'info', title: '调整' }
+]
+
+const IMAGE_OUTPUT_ACTIONS: ActionConfig[] = [
   { key: 'download', icon: 'download', title: '下载' }
 ]
 
@@ -219,8 +229,23 @@ export function getToolActionGroups(toolType: ToolType, mode: 'format' | 'diff')
 
   if (toolType === 'image') {
     groups.push({
-      name: 'image',
-      actions: IMAGE_ACTIONS,
+      name: 'image-history',
+      actions: IMAGE_HISTORY_ACTIONS,
+      visible: () => true
+    })
+    groups.push({
+      name: 'image-edit',
+      actions: IMAGE_EDIT_ACTIONS,
+      visible: () => true
+    })
+    groups.push({
+      name: 'image-process',
+      actions: IMAGE_PROCESS_ACTIONS,
+      visible: () => true
+    })
+    groups.push({
+      name: 'image-output',
+      actions: IMAGE_OUTPUT_ACTIONS,
       visible: () => true
     })
   }
