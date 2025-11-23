@@ -516,7 +516,7 @@ function handleActionWrapper(payload: Parameters<typeof handleAction>[0]) {
       :panel="importOptions.panel"
       @close="importOptions.visible = false"
       @select-file="startFileImport(importOptions.panel)"
-      @select-cache="cacheManager.openCachePicker(importOptions.panel)"
+      @select-cache="() => { importOptions.visible = false; cacheManager.openCachePicker(importOptions.panel); }"
     />
 
     <CachePickerModal

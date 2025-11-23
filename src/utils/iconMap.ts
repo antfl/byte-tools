@@ -38,7 +38,10 @@ import {
   Redo2,
   ExternalLink,
   Monitor,
-  Copy
+  Copy,
+  Eye,
+  EyeOff,
+  Trash2
 } from 'lucide-vue-next'
 
 /** 图标名称类型定义 */
@@ -77,6 +80,9 @@ export type IconName =
   | 'deep'
   | 'monitor'
   | 'copy'
+  | 'eye'
+  | 'eye-off'
+  | 'trash'
 
 /** 图标名称到组件的映射表 */
 export const iconMap: Record<IconName, Component> = {
@@ -113,6 +119,9 @@ export const iconMap: Record<IconName, Component> = {
   auto: Sparkles,
   deep: Layers,
   monitor: Monitor,
-  copy: Copy
+  copy: Copy,
+  eye: Eye,
+  'eye-off': EyeOff,
+  trash: Trash2
 }
 

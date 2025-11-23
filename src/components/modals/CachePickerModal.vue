@@ -3,6 +3,7 @@ import { computed, ref, watch, nextTick, onUnmounted } from 'vue'
 import type { PanelKey } from '@/types/jsonTools.ts'
 import type { StoredSnippet } from '@/services/storageStore.ts'
 import { formatByteSize, formatDateTime } from '@/utils/format.ts'
+import SvgIcon from '@/components/base/SvgIcon.vue'
 
 const props = defineProps<{
   visible: boolean
@@ -232,17 +233,17 @@ onUnmounted(() => {
                   </div>
                 </div>
                 <div class="snippet-item__actions">
-                  <button type="button" class="btn btn--ghost" @click="emit('preview', props.selectedId === snippet.id ? null : snippet.id)">
-                    {{ props.selectedId === snippet.id ? '收起' : '查看' }}
+                  <button type="button" class="btn btn--ghost btn--icon" :title="props.selectedId === snippet.id ? '收起' : '查看'" @click="emit('preview', props.selectedId === snippet.id ? null : snippet.id)">
+                    <SvgIcon :name="props.selectedId === snippet.id ? 'eye-off' : 'eye'" :size="18" />
                   </button>
-                  <button type="button" class="btn btn--ghost" @click="emit('copy', snippet.id)">
-                    复制
+                  <button type="button" class="btn btn--ghost btn--icon" title="复制" @click="emit('copy', snippet.id)">
+                    <SvgIcon name="copy" :size="18" />
                   </button>
-                  <button type="button" class="btn btn--primary" @click="emit('select', snippet.id)">
-                    导入
+                  <button type="button" class="btn btn--primary btn--icon" title="导入" @click="emit('select', snippet.id)">
+                    <SvgIcon name="import" :size="18" />
                   </button>
-                  <button type="button" class="btn btn--danger" @click="emit('delete', snippet.id)">
-                    删除
+                  <button type="button" class="btn btn--danger btn--icon" title="删除" @click="emit('delete', snippet.id)">
+                    <SvgIcon name="trash" :size="18" />
                   </button>
                 </div>
                 <div v-if="props.selectedId === snippet.id" class="snippet-item__preview">
@@ -502,35 +503,15 @@ onUnmounted(() => {
   overflow: hidden;
   position: relative;
 
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 3px;
-    background: linear-gradient(90deg, var(--color-brand), rgba(77, 107, 255, 0.4));
-    opacity: 0;
-    transition: opacity 0.25s ease;
-  }
-
   &:hover {
     border-color: var(--color-brand);
     box-shadow: 0 4px 16px rgba(77, 107, 255, 0.15);
     transform: translateY(-1px);
-
-    &::before {
-      opacity: 1;
-    }
   }
 
   &[data-expanded='true'] {
     border-color: var(--color-brand);
     box-shadow: 0 6px 24px rgba(77, 107, 255, 0.2);
-
-    &::before {
-      opacity: 1;
-    }
 
     .snippet-item__main {
       background: rgba(77, 107, 255, 0.05);
@@ -541,10 +522,6 @@ onUnmounted(() => {
     border-color: var(--color-brand);
     box-shadow: 0 4px 16px rgba(77, 107, 255, 0.2);
     transform: translateY(-1px);
-
-    &::before {
-      opacity: 0.6;
-    }
 
     .snippet-item__main {
       background: rgba(77, 107, 255, 0.03);
@@ -708,10 +685,24 @@ onUnmounted(() => {
   cursor: pointer;
   transition: background 0.2s, color 0.2s, border-color 0.2s, box-shadow 0.2s, transform 0.1s;
   white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
 
   &:disabled {
     cursor: not-allowed;
     opacity: 0.5;
+  }
+
+  &--icon {
+    min-width: 36px;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
   }
 
   &--ghost {
