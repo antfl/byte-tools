@@ -17,7 +17,6 @@ const emit = defineEmits<{
   (e: 'openAbout'): void
 }>()
 
-// 获取侧边栏操作按钮配置，分离主要按钮和工具按钮
 const sidebarGroups = computed(() => {
   const groups = getSidebarActions(props.toolType, props.mode)
   return groups.map(group => ({
@@ -26,7 +25,6 @@ const sidebarGroups = computed(() => {
   }))
 })
 
-// 获取关于按钮配置
 const aboutAction = computed(() => {
   const groups = getSidebarActions(props.toolType, props.mode)
   for (const group of groups) {
@@ -52,7 +50,6 @@ function handleActionClick(action: SidebarActionConfig) {
 
 function isActionActive(action: SidebarActionConfig): boolean {
   if (action.active) {
-    // 使用 useTheme 获取当前主题状态
     const { isDarkTheme } = useTheme()
     return action.active(props.mode, isDarkTheme.value) ?? false
   }

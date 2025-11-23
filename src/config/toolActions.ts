@@ -1,10 +1,57 @@
-/**
- * 工具操作按钮配置
- */
 import type { ToolType } from '@/types/jsonTools'
 
-export type ActionKey = 'triggerImport' | 'import' | 'save' | 'export' | 'format' | 'minify' | 'repair' | 'clear' | 'case' | 'encode' | 'decode' | 'trim' | 'stats' | 'compress' | 'resize' | 'crop' | 'rotate' | 'flip' | 'convert' | 'filter' | 'adjust' | 'download' | 'undo' | 'redo' | 'toggleAutoFormat' | 'toggleDeepParse'
-export type ActionIcon = 'import' | 'save' | 'export' | 'format' | 'minify' | 'repair' | 'clear' | 'case' | 'encode' | 'decode' | 'trim' | 'stats' | 'compress' | 'resize' | 'crop' | 'rotate' | 'flip' | 'convert' | 'filter' | 'info' | 'download' | 'undo' | 'redo'
+export type ActionKey =
+  | 'triggerImport'
+  | 'import'
+  | 'save'
+  | 'export'
+  | 'format'
+  | 'minify'
+  | 'repair'
+  | 'clear'
+  | 'case'
+  | 'encode'
+  | 'decode'
+  | 'trim'
+  | 'stats'
+  | 'compress'
+  | 'resize'
+  | 'crop'
+  | 'rotate'
+  | 'flip'
+  | 'convert'
+  | 'filter'
+  | 'adjust'
+  | 'download'
+  | 'undo'
+  | 'redo'
+  | 'toggleAutoFormat'
+  | 'toggleDeepParse'
+
+export type ActionIcon =
+  | 'import'
+  | 'save'
+  | 'export'
+  | 'format'
+  | 'minify'
+  | 'repair'
+  | 'clear'
+  | 'case'
+  | 'encode'
+  | 'decode'
+  | 'trim'
+  | 'stats'
+  | 'compress'
+  | 'resize'
+  | 'crop'
+  | 'rotate'
+  | 'flip'
+  | 'convert'
+  | 'filter'
+  | 'info'
+  | 'download'
+  | 'undo'
+  | 'redo'
 
 export interface ActionConfig {
   key: ActionKey
@@ -128,6 +175,12 @@ const IMAGE_ACTIONS: ActionConfig[] = [
   { key: 'download', icon: 'download', title: '下载' }
 ]
 
+/**
+ * 根据工具类型和工作模式获取操作组配置
+ * @param toolType 工具类型（'json' | 'text' | 'image'）
+ * @param mode 工作模式（'format' | 'diff'）
+ * @returns 操作组数组
+ */
 export function getToolActionGroups(toolType: ToolType, mode: 'format' | 'diff'): ActionGroup[] {
   const groups: ActionGroup[] = []
 

@@ -1,6 +1,3 @@
-/**
- * 侧边栏操作按钮配置
- */
 import type { ToolType } from '@/types/jsonTools'
 import type { IconButtonIcon } from '@/components/base/IconButton.vue'
 
@@ -19,13 +16,15 @@ export interface SidebarGroup {
 }
 
 /**
- * 获取侧边栏操作按钮配置
+ * 根据工具类型和工作模式获取侧边栏操作配置
+ * @param toolType 工具类型（'json' | 'text' | 'image'）
+ * @param mode 工作模式（'format' | 'diff'）
+ * @returns 侧边栏操作组数组
  */
 export function getSidebarActions(toolType: ToolType, mode: 'format' | 'diff'): SidebarGroup[] {
   const primaryGroup: SidebarActionConfig[] = []
   const utilityGroup: SidebarActionConfig[] = []
 
-  // 模式切换（仅 JSON 工具支持）
   if (toolType === 'json') {
     primaryGroup.push({
       key: 'format-mode',
@@ -45,7 +44,6 @@ export function getSidebarActions(toolType: ToolType, mode: 'format' | 'diff'): 
     })
   }
 
-  // 缓存管理（图片工具不显示）
   if (toolType !== 'image') {
     primaryGroup.push({
       key: 'cache-manager',
@@ -56,7 +54,6 @@ export function getSidebarActions(toolType: ToolType, mode: 'format' | 'diff'): 
     })
   }
 
-  // 关于工具
   utilityGroup.push({
     key: 'about',
     icon: 'about',
@@ -65,10 +62,9 @@ export function getSidebarActions(toolType: ToolType, mode: 'format' | 'diff'): 
     emit: 'openAbout'
   })
 
-  // 主题切换
   utilityGroup.push({
     key: 'theme-toggle',
-    icon: 'sun', // 动态图标，由组件处理
+    icon: 'sun',
     title: '切换主题',
     visible: () => true,
     emit: 'toggleTheme'
@@ -92,4 +88,3 @@ export function getSidebarActions(toolType: ToolType, mode: 'format' | 'diff'): 
 
   return groups
 }
-

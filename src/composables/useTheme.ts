@@ -9,6 +9,10 @@ let initialized = false
 let watching = false
 let mediaQuery: MediaQueryList | null = null
 
+/**
+ * 获取系统主题偏好
+ * @returns 'light' 或 'dark'
+ */
 function getSystemTheme(): 'light' | 'dark' {
   if (typeof window === 'undefined') {
     return 'dark'
@@ -18,6 +22,10 @@ function getSystemTheme(): 'light' | 'dark' {
     : 'dark'
 }
 
+/**
+ * 获取当前生效的主题
+ * @returns 'light' 或 'dark'
+ */
 function getEffectiveTheme(): 'light' | 'dark' {
   if (theme.value === 'system') {
     return systemTheme.value
@@ -25,10 +33,18 @@ function getEffectiveTheme(): 'light' | 'dark' {
   return theme.value
 }
 
+/**
+ * 应用主题到文档根元素
+ * @param mode 主题模式
+ */
 function applyTheme(mode: 'light' | 'dark') {
   document.documentElement.dataset.theme = mode
 }
 
+/**
+ * 初始化主题系统
+ * 从 localStorage 读取保存的主题设置，并监听系统主题变化
+ */
 function initTheme() {
   if (initialized) {
     return
@@ -39,25 +55,25 @@ function initTheme() {
     return
   }
 
-  // 初始化系统主题
   systemTheme.value = getSystemTheme()
 
-  // 从存储中读取主题设置
   const storedTheme = window.localStorage.getItem(STORAGE_CONSTANTS.THEME_KEY)
   if (storedTheme === 'dark' || storedTheme === 'light' || storedTheme === 'system') {
     theme.value = storedTheme as ThemeMode
   }
 
-  // 应用主题
   applyTheme(getEffectiveTheme())
 
-  // 监听系统主题变化
   if (window.matchMedia) {
     mediaQuery = window.matchMedia('(prefers-color-scheme: light)')
     mediaQuery.addEventListener('change', handleSystemThemeChange)
   }
 }
 
+/**
+ * 处理系统主题变化
+ * 当系统主题改变时，如果当前使用的是系统主题，则更新应用主题
+ */
 function handleSystemThemeChange() {
   systemTheme.value = getSystemTheme()
   if (theme.value === 'system') {
@@ -65,6 +81,10 @@ function handleSystemThemeChange() {
   }
 }
 
+/**
+ * 设置主题监听器
+ * 监听主题变化并自动保存到 localStorage
+ */
 function setupWatcher() {
   if (watching) {
     return
@@ -82,6 +102,11 @@ function setupWatcher() {
   )
 }
 
+/**
+ * 主题管理 Composable
+ * 提供主题切换、系统主题监听等功能
+ * @returns 主题相关的响应式状态和方法
+ */
 export function useTheme() {
   onMounted(() => {
     initTheme()
@@ -108,6 +133,10 @@ export function useTheme() {
     return theme.value === 'dark' ? '切换到浅色主题' : '切换到暗色主题'
   })
 
+  /**
+   * 设置主题模式
+   * @param mode 主题模式（'light' | 'dark' | 'system'）
+   */
   function setTheme(mode: ThemeMode) {
     theme.value = mode
   }

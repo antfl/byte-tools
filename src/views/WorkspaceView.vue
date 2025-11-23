@@ -66,7 +66,6 @@ function getStoredSource(tool: ToolType): string {
       return stored
     }
   } catch {
-    // 读取失败，使用默认值
   }
   
   switch (tool) {
@@ -91,7 +90,6 @@ function getStoredTarget(tool: ToolType): string {
       return stored
     }
   } catch {
-    // 读取失败，使用默认值
   }
   
   if (tool === 'json') {
@@ -117,7 +115,6 @@ watch(toolType, (newTool, oldTool) => {
       localStorage.setItem(`${STORAGE_CONSTANTS.SOURCE_KEY_PREFIX}${oldTool}`, state.source)
       localStorage.setItem(`${STORAGE_CONSTANTS.TARGET_KEY_PREFIX}${oldTool}`, state.target)
     } catch {
-      // 保存失败，静默处理
     }
   }
   
@@ -644,7 +641,6 @@ function handleTextStats(panel: PanelKey) {
   }
   try {
     const stats = getTextStats(state.source)
-    // 格式化统计信息，显示在右侧预览区域
     const statsText = `文本统计信息
 ═══════════════════════════════════════
 
@@ -979,7 +975,6 @@ async function handleConfirmSave(title: string) {
   const panel = storageDialog.panel
   const content = state[panel]
   
-  // 检查内容是否为空
   if (!content || !content.trim()) {
     showMessage('error', '空文本不允许保存')
     return
@@ -1152,13 +1147,11 @@ function handleImport(panel: PanelKey, event: Event) {
     return
   }
 
-  // 图片工具：读取为 base64
   if (toolType.value === 'image' && file.type.startsWith('image/')) {
     const reader = new FileReader()
     reader.onload = () => {
       const imageData = String(reader.result ?? '')
       state[panel] = imageData
-      // 重置历史记录并添加初始图片
       initImageHistory(imageData)
       showMessage('success', `${file.name} 已加载到${panel === 'source' ? '源' : '目标'}面板`)
       input.value = ''
@@ -1172,7 +1165,6 @@ function handleImport(panel: PanelKey, event: Event) {
     return
   }
 
-  // 文本和 JSON 工具：读取为文本
   const reader = new FileReader()
   reader.onload = () => {
     state[panel] = String(reader.result ?? '')
@@ -1195,7 +1187,6 @@ function handleExport(panel: PanelKey) {
     const timestamp = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}-${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}${String(now.getSeconds()).padStart(2, '0')}`
     
     if (toolType.value === 'image' && state[panel].startsWith('data:')) {
-      // 图片：从 base64 转换为 blob
       const base64Data = state[panel].split(',')[1]
       if (!base64Data) {
         showMessage('error', '无效的图片数据')
@@ -1268,7 +1259,6 @@ function handleDiffMount(editor: MonacoEditorNS.IStandaloneDiffEditor) {
   const originalModel = originalEditor.getModel()
   const modifiedModel = modifiedEditor.getModel()
 
-  // 为两个编辑器单独配置折叠选项
   originalEditor.updateOptions({
     folding: true,
     foldingStrategy: 'indentation',

@@ -16,21 +16,18 @@ const emit = defineEmits<{
   (e: 'close'): void
 }>()
 
-// 压缩选项
 const compressOptions = ref({
   maxSizeMB: 1,
   quality: 0.8,
   maxWidthOrHeight: 1920
 })
 
-// 调整尺寸选项
 const resizeOptions = ref({
   width: undefined as number | undefined,
   height: undefined as number | undefined,
   maintainAspectRatio: true
 })
 
-// 裁剪选项
 const cropOptions = ref({
   x: 0,
   y: 0,
@@ -38,17 +35,13 @@ const cropOptions = ref({
   height: 0
 })
 
-// 旋转角度
 const rotateAngle = ref(0)
 
-// 调整选项（亮度、对比度、饱和度）
 const adjustOptions = ref({
   brightness: 1,
   contrast: 1,
   saturation: 1
 })
-
-// 初始化选项
 watch(() => props.actionKey, (actionKey) => {
   if (actionKey === 'resize' && props.imageInfo) {
     resizeOptions.value = {

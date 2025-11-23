@@ -35,7 +35,6 @@ const imageDisplaySize = computed(() => {
   }
 })
 
-// 加载图片信息
 async function loadImageInfo() {
   if (!props.source || !props.source.startsWith('data:image/')) {
     imageInfo.value = null
@@ -162,7 +161,6 @@ onMounted(() => {
   height: 100%;
   padding: 20px;
   gap: 20px;
-  // 确保容器不会裁剪子元素
   overflow: visible;
 }
 

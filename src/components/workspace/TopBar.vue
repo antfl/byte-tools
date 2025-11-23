@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, onMounted, onUnmounted } from 'vue'
+import { computed, ref, onMounted, onUnmounted, provide } from 'vue'
 import SvgIcon from '../base/SvgIcon.vue'
 import Logo from '../../assets/logo.svg'
 import ToolActionButton from './ToolActionButton.vue'
@@ -42,6 +42,15 @@ const toolDescriptions: Record<ToolType, string> = {
 const tools: ToolType[] = ['text', 'image', 'json']
 
 const actionGroups = computed(() => getToolActionGroups(props.toolType, props.mode))
+
+const openButtonId = ref<symbol | null>(null)
+
+function setOpenButton(id: symbol | null) {
+  openButtonId.value = id
+}
+
+provide('openButtonId', openButtonId)
+provide('setOpenButton', setOpenButton)
 
 function handleToolSelect(tool: ToolType) {
   emit('update:toolType', tool)

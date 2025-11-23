@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, onUnmounted, inject, watch, type Ref } from 'vue'
 import IconButton from '../base/IconButton.vue'
 import ImageToolPanel from './ImageToolPanel.vue'
 import type { PanelKey, ToolAction, ToolType } from '@/types/jsonTools'
@@ -21,58 +21,69 @@ const emit = defineEmits<{
   (e: 'action', payload: ToolActionPayload): void
 }>()
 
-// 子菜单显示状态
-const activeSubmenu = ref(false)
+const openButtonId = inject<Ref<symbol | null>>('openButtonId')
+const setOpenButton = inject<(id: symbol | null) => void>('setOpenButton')
 
-// 图片工具面板显示状态
+const buttonId = Symbol()
+const activeSubmenu = ref(false)
 const imageToolPanelVisible = ref(false)
 
-// 是否激活
+if (openButtonId) {
+  watch(openButtonId, (id) => {
+    if (id !== buttonId) {
+      activeSubmenu.value = false
+      imageToolPanelVisible.value = false
+    }
+  }, { immediate: true })
+}
+
 const isActive = computed(() => {
   return props.activeTool === `${props.panel}-${props.action.key}`
 })
 
-// 是否是图片工具的撤销/重做按钮
 const isImageUndoRedo = computed(() => {
   return props.toolType === 'image' && (props.action.key === 'undo' || props.action.key === 'redo')
 })
 
-// 是否需要禁用
 const isDisabled = computed(() => {
   if (!isImageUndoRedo.value) return false
   return props.action.key === 'undo' ? !props.canUndo : !props.canRedo
 })
 
-// 是否是图片工具的操作面板按钮
 const isImageToolPanel = computed(() => {
   return props.toolType === 'image' && 
     ['compress', 'resize', 'crop', 'rotate', 'flip', 'adjust'].includes(props.action.key)
 })
 
-// 处理按钮点击
 function handleButtonClick() {
-  // 如果有子菜单，切换子菜单显示
   if (props.action.hasSubmenu) {
-    activeSubmenu.value = !activeSubmenu.value
-    // 如果是图片工具的子菜单，关闭图片面板
+    const willOpen = !activeSubmenu.value
+    if (willOpen) {
+      setOpenButton?.(buttonId)
+    } else {
+      setOpenButton?.(null)
+    }
+    activeSubmenu.value = willOpen
     if (props.toolType === 'image') {
       imageToolPanelVisible.value = false
     }
     return
   }
 
-  // 如果是图片工具面板按钮，切换面板显示
   if (isImageToolPanel.value) {
-    imageToolPanelVisible.value = !imageToolPanelVisible.value
+    const willOpen = !imageToolPanelVisible.value
+    if (willOpen) {
+      setOpenButton?.(buttonId)
+    } else {
+      setOpenButton?.(null)
+    }
+    imageToolPanelVisible.value = willOpen
     activeSubmenu.value = false
     return
   }
 
-  // 普通按钮，直接触发 action
   emitAction()
 }
-
-// 触发 action
 function emitAction() {
   switch (props.action.key) {
     case 'import':
@@ -111,7 +122,6 @@ function emitAction() {
   }
 }
 
-// 处理子菜单项点击
 function handleSubmenuItem(value: string) {
   switch (props.action.key) {
     case 'case':
@@ -137,21 +147,44 @@ function handleSubmenuItem(value: string) {
       }
       break
   }
-  activeSubmenu.value = false
-  imageToolPanelVisible.value = false
+  closeMenu()
 }
 
-// 处理图片工具面板的 action
 function handleImagePanelAction(payload: ToolActionPayload) {
   emit('action', payload)
 }
 
-// 关闭图片工具面板
 function handleCloseImagePanel() {
   imageToolPanelVisible.value = false
+  setOpenButton?.(null)
 }
 
-// 计算按钮激活状态
+const buttonRef = ref<HTMLDivElement | null>(null)
+
+function handleClickOutside(event: MouseEvent) {
+  if (buttonRef.value && !buttonRef.value.contains(event.target as Node)) {
+    closeMenu()
+  }
+}
+
+function closeMenu() {
+  if (activeSubmenu.value || imageToolPanelVisible.value) {
+    activeSubmenu.value = false
+    imageToolPanelVisible.value = false
+    setOpenButton?.(null)
+  }
+}
+
+onMounted(() => {
+  document.addEventListener('click', handleClickOutside)
+})
+
+onUnmounted(() => {
+  document.removeEventListener('click', handleClickOutside)
+  if (openButtonId?.value === buttonId) {
+    setOpenButton?.(null)
+  }
+})
 const buttonActive = computed(() => {
   if (props.action.hasSubmenu) {
     return isActive.value || activeSubmenu.value
@@ -165,6 +198,7 @@ const buttonActive = computed(() => {
 
 <template>
   <div 
+    ref="buttonRef"
     class="tool-action-button" 
     :class="{ 
       'tool-action-button--with-menu': action.hasSubmenu || isImageToolPanel,
@@ -181,8 +215,8 @@ const buttonActive = computed(() => {
       @click="handleButtonClick"
     />
 
-    <!-- 子菜单（文本工具） -->
-    <Transition v-if="action.hasSubmenu && toolType !== 'image'" name="submenu">
+    <!-- 子菜单（所有工具，包括图片工具的子菜单） -->
+    <Transition v-if="action.hasSubmenu" name="submenu">
       <div v-if="activeSubmenu" class="action-submenu" @click.stop>
         <button
           v-for="item in action.submenuItems"

@@ -24,23 +24,18 @@ const emit = defineEmits<{
 const panelLabel = computed(() => (props.panel === 'source' ? '源面板' : '目标面板'))
 const selectedSnippet = computed(() => props.items.find((item) => item.id === props.selectedId))
 
-// 搜索和排序
 const searchQuery = ref('')
 const sortBy = ref<'updatedAt' | 'size' | 'title'>('updatedAt')
 const sortOrder = ref<'asc' | 'desc'>('desc')
 const keyboardSelectedIndex = ref<number>(-1)
 
-// 过滤和排序后的列表
 const filteredAndSortedItems = computed(() => {
   let result = [...props.items]
 
-  // 搜索过滤
   if (searchQuery.value.trim()) {
     const query = searchQuery.value.trim().toLowerCase()
     result = result.filter((item) => item.title.toLowerCase().includes(query))
   }
-
-  // 排序
   result.sort((a, b) => {
     let comparison = 0
     if (sortBy.value === 'updatedAt') {
@@ -58,7 +53,6 @@ const filteredAndSortedItems = computed(() => {
 
 
 function handleKeydown(event: KeyboardEvent) {
-  // 只在模态框可见时处理
   if (!props.visible) {
     return
   }
@@ -69,7 +63,6 @@ function handleKeydown(event: KeyboardEvent) {
     return
   }
 
-  // 如果正在输入搜索框或选择框，不处理导航
   if (event.target instanceof HTMLInputElement || event.target instanceof HTMLSelectElement || event.target instanceof HTMLButtonElement) {
     return
   }
@@ -122,7 +115,6 @@ watch(() => props.visible, (newVal) => {
 
 watch(() => props.items.length, resetKeyboardSelection)
 
-// 使用 watch 来管理事件监听器，确保只在可见时监听
 watch(() => props.visible, (isVisible) => {
   if (isVisible) {
     document.addEventListener('keydown', handleKeydown)

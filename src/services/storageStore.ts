@@ -1,6 +1,9 @@
 import type { PanelKey } from '../types/jsonTools'
 import { DB_CONSTANTS } from '@/constants'
 
+/**
+ * 存储的代码片段接口
+ */
 export interface StoredSnippet {
   id: string
   title: string
@@ -17,6 +20,11 @@ const DB_VERSION = DB_CONSTANTS.DB_VERSION
 
 let dbPromise: Promise<IDBDatabase> | null = null
 
+/**
+ * 确保 IndexedDB 可用
+ * @returns IDBFactory 实例
+ * @throws 如果环境不支持 IndexedDB 则抛出错误
+ */
 function ensureIndexedDB(): IDBFactory {
   if (typeof indexedDB === 'undefined') {
     throw new Error('当前环境不支持 IndexedDB，无法使用缓存存储功能')
@@ -24,6 +32,10 @@ function ensureIndexedDB(): IDBFactory {
   return indexedDB
 }
 
+/**
+ * 生成唯一 ID
+ * @returns 唯一标识符字符串
+ */
 function generateId(): string {
   if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
     return crypto.randomUUID()
@@ -31,6 +43,10 @@ function generateId(): string {
   return `${Date.now()}-${Math.random().toString(16).slice(2)}`
 }
 
+/**
+ * 获取 IndexedDB 数据库实例（单例模式）
+ * @returns Promise<IDBDatabase>
+ */
 function getDatabase(): Promise<IDBDatabase> {
   if (dbPromise) {
     return dbPromise
@@ -63,6 +79,12 @@ function getDatabase(): Promise<IDBDatabase> {
   return dbPromise
 }
 
+/**
+ * 执行 IndexedDB 事务的辅助函数
+ * @param mode 事务模式（'readonly' | 'readwrite'）
+ * @param handler 事务处理函数
+ * @returns Promise<T> 事务执行结果
+ */
 function withTransaction<T>(
   mode: IDBTransactionMode,
   handler: (store: IDBObjectStore) => Promise<T> | T
@@ -101,6 +123,11 @@ function withTransaction<T>(
   )
 }
 
+/**
+ * 计算内容大小（字节数）
+ * @param content 文本内容
+ * @returns 字节数
+ */
 function computeSize(content: string): number {
   if (typeof TextEncoder !== 'undefined') {
     return new TextEncoder().encode(content).length
@@ -108,6 +135,13 @@ function computeSize(content: string): number {
   return content.length
 }
 
+/**
+ * 保存代码片段到 IndexedDB
+ * @param panel 面板键（'source' | 'target'）
+ * @param title 片段标题
+ * @param content 片段内容
+ * @returns Promise<StoredSnippet> 保存的片段对象
+ */
 export async function saveSnippet(panel: PanelKey, title: string, content: string): Promise<StoredSnippet> {
   const now = Date.now()
   const snippet: StoredSnippet = {
@@ -131,6 +165,10 @@ export async function saveSnippet(panel: PanelKey, title: string, content: strin
   return snippet
 }
 
+/**
+ * 列出所有代码片段（按更新时间倒序）
+ * @returns Promise<StoredSnippet[]> 片段列表
+ */
 export async function listSnippets(): Promise<StoredSnippet[]> {
   return withTransaction('readonly', (store) => {
     return new Promise<StoredSnippet[]>((resolve, reject) => {
@@ -154,6 +192,11 @@ export async function listSnippets(): Promise<StoredSnippet[]> {
   })
 }
 
+/**
+ * 根据 ID 获取代码片段
+ * @param id 片段 ID
+ * @returns Promise<StoredSnippet | undefined> 片段对象，不存在则返回 undefined
+ */
 export async function getSnippet(id: string): Promise<StoredSnippet | undefined> {
   return withTransaction('readonly', (store) => {
     return new Promise<StoredSnippet | undefined>((resolve, reject) => {
@@ -168,6 +211,11 @@ export async function getSnippet(id: string): Promise<StoredSnippet | undefined>
   })
 }
 
+/**
+ * 删除代码片段
+ * @param id 片段 ID
+ * @returns Promise<void>
+ */
 export async function deleteSnippet(id: string): Promise<void> {
   await withTransaction('readwrite', (store) => {
     return new Promise<void>((resolve, reject) => {

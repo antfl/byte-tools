@@ -1,5 +1,11 @@
 import { CaseType, TrimOption, EncodeType } from '@/types/enums'
 
+/**
+ * 转换文本大小写格式
+ * @param text 待转换的文本
+ * @param caseType 目标大小写类型
+ * @returns 转换后的文本
+ */
 export function convertCase(text: string, caseType: CaseType): string {
   if (!text) return text
 
@@ -41,6 +47,12 @@ export function convertCase(text: string, caseType: CaseType): string {
   }
 }
 
+/**
+ * Base64 编码
+ * @param text 待编码的文本
+ * @returns Base64 编码后的字符串
+ * @throws 编码失败时抛出错误
+ */
 export function encodeBase64(text: string): string {
   try {
     return btoa(unescape(encodeURIComponent(text)))
@@ -49,6 +61,12 @@ export function encodeBase64(text: string): string {
   }
 }
 
+/**
+ * Base64 解码
+ * @param text Base64 编码的字符串
+ * @returns 解码后的文本
+ * @throws 解码失败时抛出错误
+ */
 export function decodeBase64(text: string): string {
   try {
     return decodeURIComponent(escape(atob(text)))
@@ -57,6 +75,12 @@ export function decodeBase64(text: string): string {
   }
 }
 
+/**
+ * URL 编码
+ * @param text 待编码的文本
+ * @returns URL 编码后的字符串
+ * @throws 编码失败时抛出错误
+ */
 export function encodeURL(text: string): string {
   try {
     return encodeURIComponent(text)
@@ -65,6 +89,12 @@ export function encodeURL(text: string): string {
   }
 }
 
+/**
+ * URL 解码
+ * @param text URL 编码的字符串
+ * @returns 解码后的文本
+ * @throws 解码失败时抛出错误
+ */
 export function decodeURL(text: string): string {
   try {
     return decodeURIComponent(text)
@@ -73,6 +103,12 @@ export function decodeURL(text: string): string {
   }
 }
 
+/**
+ * 去除文本空白字符
+ * @param text 待处理的文本
+ * @param option 去除选项（全部、行首、行尾、行首尾、空行）
+ * @returns 处理后的文本
+ */
 export function trimWhitespace(text: string, option: TrimOption): string {
   if (!text) return text
 
@@ -95,6 +131,9 @@ export function trimWhitespace(text: string, option: TrimOption): string {
   }
 }
 
+/**
+ * 文本统计信息接口
+ */
 export interface TextStats {
   characters: number
   charactersNoSpaces: number
@@ -104,6 +143,11 @@ export interface TextStats {
   bytes: number
 }
 
+/**
+ * 获取文本统计信息（字符数、单词数、行数、段落数、字节数等）
+ * @param text 待统计的文本
+ * @returns 统计信息对象
+ */
 export function getTextStats(text: string): TextStats {
   const characters = text.length
   const charactersNoSpaces = text.replace(/\s/g, '').length

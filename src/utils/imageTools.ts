@@ -3,6 +3,9 @@ import exifr from 'exifr'
 import { ImageFormat, FilterType, FlipDirection } from '@/types/enums'
 import { IMAGE_CONSTANTS, SIZE_UNITS } from '@/constants'
 
+/**
+ * EXIF 元数据接口
+ */
 export interface ExifData {
   Orientation?: number
   DateTimeOriginal?: string
@@ -14,6 +17,9 @@ export interface ExifData {
   [key: string]: unknown
 }
 
+/**
+ * 图片信息接口
+ */
 export interface ImageInfo {
   width: number
   height: number
@@ -23,12 +29,18 @@ export interface ImageInfo {
   exif?: ExifData
 }
 
+/**
+ * 图片调整尺寸选项
+ */
 export interface ResizeOptions {
   width?: number
   height?: number
   maintainAspectRatio?: boolean
 }
 
+/**
+ * 图片压缩选项
+ */
 export interface CompressOptions {
   maxSizeMB?: number
   maxWidthOrHeight?: number
@@ -36,12 +48,18 @@ export interface CompressOptions {
   quality?: number
 }
 
+/**
+ * 图片调整选项（亮度、对比度、饱和度）
+ */
 export interface AdjustOptions {
   brightness?: number
   contrast?: number
   saturation?: number
 }
 
+/**
+ * 图片裁剪选项
+ */
 export interface CropOptions {
   x: number
   y: number
@@ -49,6 +67,11 @@ export interface CropOptions {
   height: number
 }
 
+/**
+ * 加载图片为 HTMLImageElement
+ * @param source 图片源（Base64 字符串或 File 对象）
+ * @returns Promise<HTMLImageElement>
+ */
 export async function loadImage(source: string | File): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const img = new Image()
@@ -68,6 +91,11 @@ export async function loadImage(source: string | File): Promise<HTMLImageElement
   })
 }
 
+/**
+ * 将图片转换为 Canvas 元素
+ * @param source 图片源（Base64 字符串或 File 对象）
+ * @returns Promise<HTMLCanvasElement>
+ */
 export async function imageToCanvas(source: string | File): Promise<HTMLCanvasElement> {
   const img = await loadImage(source)
   const canvas = document.createElement('canvas')
@@ -79,10 +107,24 @@ export async function imageToCanvas(source: string | File): Promise<HTMLCanvasEl
   return canvas
 }
 
+/**
+ * 将 Canvas 转换为 Base64 字符串
+ * @param canvas Canvas 元素
+ * @param mimeType MIME 类型，默认为 'image/png'
+ * @param quality 图片质量（0-1），仅适用于 JPEG/WebP
+ * @returns Base64 字符串
+ */
 export function canvasToBase64(canvas: HTMLCanvasElement, mimeType: string = 'image/png', quality?: number): string {
   return canvas.toDataURL(mimeType, quality)
 }
 
+/**
+ * 将 Canvas 转换为 Blob 对象
+ * @param canvas Canvas 元素
+ * @param mimeType MIME 类型，默认为 'image/png'
+ * @param quality 图片质量（0-1），仅适用于 JPEG/WebP
+ * @returns Promise<Blob>
+ */
 export function canvasToBlob(canvas: HTMLCanvasElement, mimeType: string = 'image/png', quality?: number): Promise<Blob> {
   return new Promise((resolve, reject) => {
     canvas.toBlob(
@@ -99,6 +141,12 @@ export function canvasToBlob(canvas: HTMLCanvasElement, mimeType: string = 'imag
   })
 }
 
+/**
+ * 将 Base64 字符串转换为 File 对象
+ * @param base64 Base64 字符串（可包含 data URL 前缀）
+ * @param filename 文件名，默认为 'image.png'
+ * @returns File 对象
+ */
 export function base64ToFile(base64: string, filename: string = 'image.png'): File {
   const arr = base64.split(',')
   const mimeMatch = arr[0]?.match(/:(.*?);/)
@@ -112,6 +160,11 @@ export function base64ToFile(base64: string, filename: string = 'image.png'): Fi
   return new File([u8arr], filename, { type: mimeType })
 }
 
+/**
+ * 将 File 对象转换为 Base64 字符串
+ * @param file File 对象
+ * @returns Promise<string> Base64 字符串（包含 data URL 前缀）
+ */
 export function fileToBase64(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader()
@@ -121,6 +174,11 @@ export function fileToBase64(file: File): Promise<string> {
   })
 }
 
+/**
+ * 获取图片信息（尺寸、格式、EXIF 等）
+ * @param source 图片源（Base64 字符串或 File 对象）
+ * @returns Promise<ImageInfo>
+ */
 export async function getImageInfo(source: string | File): Promise<ImageInfo> {
   const img = await loadImage(source)
   let file: File | null = null
@@ -148,13 +206,18 @@ export async function getImageInfo(source: string | File): Promise<ImageInfo> {
         info.exif = exif
       }
     } catch {
-      // EXIF 读取失败，静默处理
     }
   }
 
   return info
 }
 
+/**
+ * 压缩图片
+ * @param source 图片源（Base64 字符串或 File 对象）
+ * @param options 压缩选项
+ * @returns Promise<string> 压缩后的 Base64 字符串
+ */
 export async function compressImage(
   source: string | File,
   options: CompressOptions = {}
@@ -189,6 +252,12 @@ export async function compressImage(
   return await fileToBase64(compressedFile)
 }
 
+/**
+ * 调整图片尺寸
+ * @param source 图片源（Base64 字符串或 File 对象）
+ * @param options 调整选项（宽度、高度、是否保持宽高比）
+ * @returns Promise<string> 调整后的 Base64 字符串
+ */
 export async function resizeImage(
   source: string | File,
   options: ResizeOptions
@@ -229,6 +298,12 @@ export async function resizeImage(
   return canvasToBase64(canvas, img.src.includes('data:image/') ? getMimeTypeFromBase64(img.src) : 'image/png')
 }
 
+/**
+ * 裁剪图片
+ * @param source 图片源（Base64 字符串或 File 对象）
+ * @param options 裁剪选项（起始坐标和尺寸）
+ * @returns Promise<string> 裁剪后的 Base64 字符串
+ */
 export async function cropImage(
   source: string | File,
   options: CropOptions
@@ -247,6 +322,12 @@ export async function cropImage(
   return canvasToBase64(canvas, img.src.includes('data:image/') ? getMimeTypeFromBase64(img.src) : 'image/png')
 }
 
+/**
+ * 旋转图片
+ * @param source 图片源（Base64 字符串或 File 对象）
+ * @param degrees 旋转角度（度数，正数为顺时针）
+ * @returns Promise<string> 旋转后的 Base64 字符串
+ */
 export async function rotateImage(
   source: string | File,
   degrees: number
@@ -273,6 +354,12 @@ export async function rotateImage(
   return canvasToBase64(canvas, img.src.includes('data:image/') ? getMimeTypeFromBase64(img.src) : 'image/png')
 }
 
+/**
+ * 翻转图片（水平或垂直）
+ * @param source 图片源（Base64 字符串或 File 对象）
+ * @param direction 翻转方向
+ * @returns Promise<string> 翻转后的 Base64 字符串
+ */
 export async function flipImage(
   source: string | File,
   direction: FlipDirection
@@ -297,6 +384,12 @@ export async function flipImage(
   return canvasToBase64(canvas, img.src.includes('data:image/') ? getMimeTypeFromBase64(img.src) : 'image/png')
 }
 
+/**
+ * 转换图片格式
+ * @param source 图片源（Base64 字符串或 File 对象）
+ * @param targetFormat 目标格式
+ * @returns Promise<string> 转换后的 Base64 字符串
+ */
 export async function convertImageFormat(
   source: string | File,
   targetFormat: ImageFormat
@@ -340,6 +433,12 @@ export async function convertImageFormat(
   return canvasToBase64(canvas, mimeType, quality)
 }
 
+/**
+ * 应用图片滤镜
+ * @param source 图片源（Base64 字符串或 File 对象）
+ * @param filter 滤镜类型
+ * @returns Promise<string> 应用滤镜后的 Base64 字符串
+ */
 export async function applyFilter(
   source: string | File,
   filter: FilterType
@@ -367,6 +466,12 @@ export async function applyFilter(
   return canvasToBase64(canvas, img.src.includes('data:image/') ? getMimeTypeFromBase64(img.src) : 'image/png')
 }
 
+/**
+ * 调整图片（亮度、对比度、饱和度）
+ * @param source 图片源（Base64 字符串或 File 对象）
+ * @param options 调整选项
+ * @returns Promise<string> 调整后的 Base64 字符串
+ */
 export async function adjustImage(
   source: string | File,
   options: AdjustOptions
@@ -385,11 +490,21 @@ export async function adjustImage(
   return canvasToBase64(canvas, img.src.includes('data:image/') ? getMimeTypeFromBase64(img.src) : 'image/png')
 }
 
+/**
+ * 从 Base64 字符串中提取 MIME 类型
+ * @param base64 Base64 字符串（包含 data URL 前缀）
+ * @returns MIME 类型字符串
+ */
 function getMimeTypeFromBase64(base64: string): string {
   const match = base64.match(/data:([^;]+);/)
   return match?.[1] || 'image/png'
 }
 
+/**
+ * 格式化文件大小（字节转换为可读格式）
+ * @param bytes 字节数
+ * @returns 格式化后的字符串（如 "1.5 MB"）
+ */
 export function formatFileSize(bytes: number): string {
   if (bytes === 0) return '0 B'
   const k = 1024
