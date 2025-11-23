@@ -31,7 +31,7 @@
       </nav>
 
       <div class="header-actions">
-        <ThemeToggle />
+        <ThemeToggle variant="button" />
       </div>
     </div>
   </header>

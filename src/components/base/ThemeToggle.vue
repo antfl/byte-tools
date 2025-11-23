@@ -1,5 +1,5 @@
 <template>
-  <div class="theme-toggle-wrapper" ref="wrapperRef">
+  <div class="theme-toggle-wrapper" :class="{ 'theme-toggle-wrapper--button': variant === 'button' }" ref="wrapperRef">
     <IconButton
       :icon="currentIcon"
       :title="themeToggleTitle"
@@ -40,6 +40,15 @@ import IconButton from "./IconButton.vue";
 import { useTheme } from "@/composables/useTheme";
 import type { ThemeMode } from "@/types/jsonTools";
 import type { IconButtonIcon } from "./IconButton.vue";
+
+const props = withDefaults(
+  defineProps<{
+    variant?: 'icon' | 'button'
+  }>(),
+  {
+    variant: 'icon'
+  }
+);
 
 const { theme, effectiveTheme, themeToggleTitle, setTheme } = useTheme();
 
@@ -137,7 +146,7 @@ onUnmounted(() => {
   display: inline-block;
 }
 
-.theme-toggle-wrapper :deep(.icon-button) {
+.theme-toggle-wrapper--button :deep(.icon-button) {
   width: auto;
   height: auto;
   padding: 0.4rem 0.85rem;
@@ -148,13 +157,13 @@ onUnmounted(() => {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.theme-toggle-wrapper :deep(.icon-button:hover) {
+.theme-toggle-wrapper--button :deep(.icon-button:hover) {
   transform: translateY(-1px);
   background: color-mix(in srgb, var(--brand-primary) 10%, transparent);
   box-shadow: 0 8px 24px color-mix(in srgb, var(--brand-primary) 15%, transparent);
 }
 
-.theme-toggle-wrapper :deep(.icon-button__icon) {
+.theme-toggle-wrapper--button :deep(.icon-button__icon) {
   width: 18px;
   height: 18px;
   transform: scale(1);
