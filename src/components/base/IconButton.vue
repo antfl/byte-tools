@@ -10,7 +10,6 @@ const props = withDefaults(
     title: string
     active?: boolean
     showLabel?: boolean
-    [key: string]: any
   }>(),
   {
     active: false,

@@ -1,6 +1,7 @@
 import type { PanelKey } from '../types/jsonTools'
+import { DB_CONSTANTS } from '@/constants'
 
-export type StoredSnippet = {
+export interface StoredSnippet {
   id: string
   title: string
   panel: PanelKey
@@ -10,9 +11,9 @@ export type StoredSnippet = {
   size: number
 }
 
-const DB_NAME = 'byte-tools-storage'
-const STORE_NAME = 'snippets'
-const DB_VERSION = 1
+const DB_NAME = DB_CONSTANTS.DB_NAME
+const STORE_NAME = DB_CONSTANTS.STORE_NAME
+const DB_VERSION = DB_CONSTANTS.DB_VERSION
 
 let dbPromise: Promise<IDBDatabase> | null = null
 
@@ -176,5 +177,3 @@ export async function deleteSnippet(id: string): Promise<void> {
     })
   })
 }
-
-

@@ -1,8 +1,8 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import type { ThemeMode } from '../types/jsonTools'
+import { STORAGE_CONSTANTS } from '@/constants'
 
 const theme = ref<ThemeMode>('dark')
-const THEME_STORAGE_KEY = 'byte-tools-theme'
 
 let initialized = false
 let watching = false
@@ -21,7 +21,7 @@ function initTheme() {
     return
   }
 
-  const storedTheme = window.localStorage.getItem(THEME_STORAGE_KEY)
+  const storedTheme = window.localStorage.getItem(STORAGE_CONSTANTS.THEME_KEY)
   if (storedTheme === 'dark' || storedTheme === 'light') {
     theme.value = storedTheme
   } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
@@ -41,7 +41,7 @@ function setupWatcher() {
     (mode) => {
       applyTheme(mode)
       if (typeof window !== 'undefined') {
-        window.localStorage.setItem(THEME_STORAGE_KEY, mode)
+        window.localStorage.setItem(STORAGE_CONSTANTS.THEME_KEY, mode)
       }
     },
     { immediate: true }

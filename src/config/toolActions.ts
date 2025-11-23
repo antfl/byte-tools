@@ -3,8 +3,8 @@
  */
 import type { ToolType } from '@/types/jsonTools'
 
-export type ActionKey = 'import' | 'save' | 'export' | 'format' | 'minify' | 'repair' | 'clear' | 'case' | 'encode' | 'decode' | 'trim' | 'stats'
-export type ActionIcon = 'import' | 'save' | 'export' | 'format' | 'minify' | 'repair' | 'clear' | 'case' | 'encode' | 'decode' | 'trim' | 'stats'
+export type ActionKey = 'triggerImport' | 'import' | 'save' | 'export' | 'format' | 'minify' | 'repair' | 'clear' | 'case' | 'encode' | 'decode' | 'trim' | 'stats' | 'compress' | 'resize' | 'crop' | 'rotate' | 'flip' | 'convert' | 'filter' | 'adjust' | 'download' | 'undo' | 'redo' | 'toggleAutoFormat' | 'toggleDeepParse'
+export type ActionIcon = 'import' | 'save' | 'export' | 'format' | 'minify' | 'repair' | 'clear' | 'case' | 'encode' | 'decode' | 'trim' | 'stats' | 'compress' | 'resize' | 'crop' | 'rotate' | 'flip' | 'convert' | 'filter' | 'info' | 'download' | 'undo' | 'redo'
 
 export interface ActionConfig {
   key: ActionKey
@@ -24,21 +24,18 @@ export interface ActionGroup {
   visible?: (toolType: ToolType, mode: 'format' | 'diff') => boolean
 }
 
-// 数据管理操作组
 const DATA_ACTIONS: ActionConfig[] = [
   { key: 'save', icon: 'save', title: '存储到缓存' },
   { key: 'import', icon: 'import', title: '导入', showLabel: true },
   { key: 'export', icon: 'export', title: '导出', showLabel: true }
 ]
 
-// JSON 格式化操作组
 const JSON_FORMAT_ACTIONS: ActionConfig[] = [
   { key: 'format', icon: 'format', title: '格式化' },
   { key: 'minify', icon: 'minify', title: '压缩' },
   { key: 'repair', icon: 'repair', title: '尝试修复' }
 ]
 
-// 文本工具操作组
 const TEXT_ACTIONS: ActionConfig[] = [
   {
     key: 'case',
@@ -91,25 +88,66 @@ const TEXT_ACTIONS: ActionConfig[] = [
   { key: 'stats', icon: 'stats', title: '统计信息' }
 ]
 
-// 清空操作
 const CLEAR_ACTION: ActionConfig = { key: 'clear', icon: 'clear', title: '清空' }
 
-/**
- * 获取工具的操作按钮配置
- */
+const IMAGE_ACTIONS: ActionConfig[] = [
+  { key: 'undo', icon: 'undo', title: '撤销' },
+  { key: 'redo', icon: 'redo', title: '重做' },
+  { key: 'compress', icon: 'compress', title: '压缩' },
+  { key: 'resize', icon: 'resize', title: '调整尺寸' },
+  { key: 'crop', icon: 'crop', title: '裁剪' },
+  { key: 'rotate', icon: 'rotate', title: '旋转' },
+  { key: 'flip', icon: 'flip', title: '翻转' },
+      {
+        key: 'convert',
+        icon: 'convert',
+        title: '转换格式',
+        hasSubmenu: true,
+        submenuItems: [
+          { label: 'PNG', value: 'png' },
+          { label: 'JPG', value: 'jpg' },
+          { label: 'WebP', value: 'webp' },
+          { label: 'ICO', value: 'ico' },
+          { label: 'SVG', value: 'svg' },
+          { label: 'Base64', value: 'base64' }
+        ]
+      },
+  {
+    key: 'filter',
+    icon: 'filter',
+    title: '滤镜',
+    hasSubmenu: true,
+    submenuItems: [
+      { label: '灰度', value: 'grayscale' },
+      { label: '怀旧', value: 'sepia' },
+      { label: '反色', value: 'invert' },
+      { label: '模糊', value: 'blur' }
+    ]
+  },
+  { key: 'adjust', icon: 'info', title: '调整' },
+  { key: 'download', icon: 'download', title: '下载' }
+]
+
 export function getToolActionGroups(toolType: ToolType, mode: 'format' | 'diff'): ActionGroup[] {
   const groups: ActionGroup[] = []
 
-  // 数据管理组 - 所有工具都显示（除了图片工具）
   if (toolType !== 'image') {
     groups.push({
       name: 'data',
       actions: DATA_ACTIONS,
       visible: () => true
     })
+  } else {
+    groups.push({
+      name: 'data',
+      actions: [
+        { key: 'import', icon: 'import', title: '导入', showLabel: true },
+        { key: 'export', icon: 'export', title: '导出', showLabel: true }
+      ],
+      visible: () => true
+    })
   }
 
-  // JSON 格式化工具组 - 仅 JSON 工具
   if (toolType === 'json') {
     groups.push({
       name: 'format',
@@ -118,7 +156,6 @@ export function getToolActionGroups(toolType: ToolType, mode: 'format' | 'diff')
     })
   }
 
-  // 文本工具组 - 仅文本工具
   if (toolType === 'text') {
     groups.push({
       name: 'text',
@@ -127,7 +164,14 @@ export function getToolActionGroups(toolType: ToolType, mode: 'format' | 'diff')
     })
   }
 
-  // 清空组 - 所有工具都显示（除了图片工具）
+  if (toolType === 'image') {
+    groups.push({
+      name: 'image',
+      actions: IMAGE_ACTIONS,
+      visible: () => true
+    })
+  }
+
   if (toolType !== 'image') {
     groups.push({
       name: 'clear',

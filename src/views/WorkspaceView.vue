@@ -28,10 +28,21 @@ import {
   encodeURL,
   decodeURL,
   trimWhitespace,
-  getTextStats,
-  type CaseType,
-  type TrimOption
+  getTextStats
 } from '../utils/textTools'
+import {
+  compressImage,
+  resizeImage,
+  cropImage,
+  rotateImage,
+  flipImage,
+  convertImageFormat,
+  applyFilter,
+  adjustImage
+} from '../utils/imageTools'
+import { IMAGE_CONSTANTS, STORAGE_CONSTANTS, EDITOR_CONSTANTS } from '@/constants'
+import { ImageFormat, FilterType, FlipDirection, CaseType, TrimOption, EncodeType } from '@/types/enums'
+import type { ToolActionPayload } from '@/types/actions'
 
 const { theme, themeToggleTitle, isDarkTheme, toggleTheme } = useTheme()
 
@@ -40,22 +51,24 @@ const differ = createDiffer({
   arrays: { detectMove: false, includeValueOnMove: false }
 })
 
-// 从配置加载默认工具类型
+const imageWorkspaceRef = ref<InstanceType<typeof ImageWorkspace> | null>(null)
+const currentImageInfo = ref<{ width: number; height: number } | null>(null)
+const imageHistory = ref<string[]>([])
+const imageHistoryIndex = ref(-1)
+
 const config = getConfig()
 const toolType = ref<ToolType>(config.defaultTool)
 
-// 从 localStorage 恢复内容
-const getStoredSource = (tool: ToolType): string => {
+function getStoredSource(tool: ToolType): string {
   try {
-    const stored = localStorage.getItem(`byte-tools-source-${tool}`)
+    const stored = localStorage.getItem(`${STORAGE_CONSTANTS.SOURCE_KEY_PREFIX}${tool}`)
     if (stored) {
       return stored
     }
-  } catch (error) {
-    console.warn('无法读取 localStorage:', error)
+  } catch {
+    // 读取失败，使用默认值
   }
   
-  // 根据工具类型返回默认内容
   switch (tool) {
     case 'json':
       return `{
@@ -71,14 +84,14 @@ const getStoredSource = (tool: ToolType): string => {
   }
 }
 
-const getStoredTarget = (tool: ToolType): string => {
+function getStoredTarget(tool: ToolType): string {
   try {
-    const stored = localStorage.getItem(`byte-tools-target-${tool}`)
+    const stored = localStorage.getItem(`${STORAGE_CONSTANTS.TARGET_KEY_PREFIX}${tool}`)
     if (stored) {
       return stored
     }
-  } catch (error) {
-    console.warn('无法读取 localStorage:', error)
+  } catch {
+    // 读取失败，使用默认值
   }
   
   if (tool === 'json') {
@@ -98,31 +111,24 @@ const state = reactive({
 
 const mode = ref<'format' | 'diff'>('format')
 
-// 监听工具类型变化，更新内容
 watch(toolType, (newTool, oldTool) => {
-  // 保存旧工具的内容
   if (oldTool) {
     try {
-      localStorage.setItem(`byte-tools-source-${oldTool}`, state.source)
-      localStorage.setItem(`byte-tools-target-${oldTool}`, state.target)
-    } catch (error) {
-      console.warn('无法保存 localStorage:', error)
+      localStorage.setItem(`${STORAGE_CONSTANTS.SOURCE_KEY_PREFIX}${oldTool}`, state.source)
+      localStorage.setItem(`${STORAGE_CONSTANTS.TARGET_KEY_PREFIX}${oldTool}`, state.target)
+    } catch {
+      // 保存失败，静默处理
     }
   }
   
-  // 加载新工具的内容
   state.source = getStoredSource(newTool)
   state.target = getStoredTarget(newTool)
-  
-  // 保存配置
   saveConfig({ defaultTool: newTool })
   
-  // JSON 工具才支持 diff 模式
   if (newTool !== 'json' && mode.value === 'diff') {
     mode.value = 'format'
   }
   
-  // 重置预览内容
   previewContent.value = ''
   previewIsValid.value = true
 })
@@ -163,8 +169,7 @@ const cachePicker = reactive({
   selectedId: null as string | null
 })
 
-// 根据工具类型获取编辑器语言
-const getEditorLanguage = (tool: ToolType): string => {
+function getEditorLanguage(tool: ToolType): string {
   switch (tool) {
     case 'json':
       return 'json'
@@ -324,7 +329,7 @@ watch(editorTheme, (themeName) => {
 })
 
 onMounted(() => {
-  const storedTheme = localStorage.getItem('byte-tools-theme')
+  const storedTheme = localStorage.getItem(STORAGE_CONSTANTS.THEME_KEY)
   const currentTheme = storedTheme === 'dark' || storedTheme === 'light' ? storedTheme : theme.value
   monaco.editor.setTheme(`byte-tools-${currentTheme}`)
 })
@@ -340,12 +345,11 @@ watch(
   }
 )
 
-// 监听 source 变化并保存到 localStorage
 watch(
   [() => state.source, () => toolType.value],
   ([source, tool]) => {
     try {
-      localStorage.setItem(`byte-tools-source-${tool}`, source)
+      localStorage.setItem(`${STORAGE_CONSTANTS.SOURCE_KEY_PREFIX}${tool}`, source)
     } catch (error) {
       console.warn('无法保存到 localStorage:', error)
     }
@@ -359,7 +363,6 @@ watch(
       return
     }
     
-    // 检查是否为空或只有空白字符
     const trimmedSource = source.trim()
     if (!trimmedSource) {
       previewContent.value = `// 请输入 JSON 字符串`
@@ -371,7 +374,6 @@ watch(
     try {
       let parsed = JSON.parse(source)
       
-      // 如果启用了深度解析，递归解析所有字符串中的 JSON
       if (isDeepParse) {
         parsed = deepParseJson(parsed)
       }
@@ -387,7 +389,6 @@ watch(
           column: errorInfo.column
         }
         
-        // 提取错误位置前后各20个字符的上下文
         const contextLength = 20
         const errorPos = errorInfo.position
         const startPos = Math.max(0, errorPos - contextLength)
@@ -395,7 +396,6 @@ watch(
         const context = source.substring(startPos, endPos)
         const errorCharIndexInContext = errorPos - startPos
         
-        // 转义特殊字符以便在注释中显示
         const escapeForComment = (str: string) => {
           return str
             .replace(/\n/g, '\\n')
@@ -407,18 +407,12 @@ watch(
         const beforeError = escapedContext.substring(0, errorCharIndexInContext)
         const errorChar = errorInfo.errorChar || (errorPos < source.length ? source[errorPos] : '')
         const afterError = escapedContext.substring(errorCharIndexInContext + 1)
-        
-        // 如果前面有内容，添加省略号
         const prefixEllipsis = startPos > 0 ? '...' : ''
-        // 如果后面有内容，添加省略号
         const suffixEllipsis = endPos < source.length ? '...' : ''
-        
-        // 计算指示器位置（考虑前缀省略号）
         const prefixLength = prefixEllipsis.length
         const indicatorPos = prefixLength + beforeError.length
         const errorCharDisplay = errorChar ? `[${errorChar}]` : '?'
         
-        // 构建美观的错误提示
         previewContent.value = `// ════════════════════════════════════════════════════════════
 //  JSON 解析错误
 // ════════════════════════════════════════════════════════════
@@ -503,10 +497,10 @@ function showMessage(level: MessageLevel, text: string) {
   messageTimer = window.setTimeout(() => {
     message.value = null
     messageTimer = null
-  }, 2800)
+  }, EDITOR_CONSTANTS.MESSAGE_DURATION)
 }
 
-function handleFormat(panel: PanelKey, space = 2) {
+function handleFormat(panel: PanelKey, space = EDITOR_CONSTANTS.DEFAULT_JSON_INDENT) {
   if (toolType.value !== 'json') {
     showMessage('info', '格式化功能仅适用于 JSON 工具')
     return
@@ -561,14 +555,14 @@ function handleRepair(panel: PanelKey) {
   }
 }
 
-function handleTextCase(panel: PanelKey, caseType: string) {
+function handleTextCase(panel: PanelKey, caseType: CaseType) {
   if (toolType.value !== 'text') {
     showMessage('info', '大小写转换功能仅适用于文本工具')
     return
   }
   try {
     busyPanel.value = panel
-    const result = convertCase(state.source, caseType as CaseType)
+    const result = convertCase(state.source, caseType)
     previewContent.value = result
     showMessage('success', '大小写转换成功')
     activeTool.value = `${panel}-case`
@@ -579,7 +573,7 @@ function handleTextCase(panel: PanelKey, caseType: string) {
   }
 }
 
-function handleTextEncode(panel: PanelKey, encodeType: string) {
+function handleTextEncode(panel: PanelKey, encodeType: EncodeType) {
   if (toolType.value !== 'text') {
     showMessage('info', '编码功能仅适用于文本工具')
     return
@@ -587,9 +581,9 @@ function handleTextEncode(panel: PanelKey, encodeType: string) {
   try {
     busyPanel.value = panel
     let result = ''
-    if (encodeType === 'base64') {
+    if (encodeType === EncodeType.BASE64) {
       result = encodeBase64(state.source)
-    } else if (encodeType === 'url') {
+    } else if (encodeType === EncodeType.URL) {
       result = encodeURL(state.source)
     }
     previewContent.value = result
@@ -603,7 +597,7 @@ function handleTextEncode(panel: PanelKey, encodeType: string) {
   }
 }
 
-function handleTextDecode(panel: PanelKey, decodeType: string) {
+function handleTextDecode(panel: PanelKey, decodeType: EncodeType) {
   if (toolType.value !== 'text') {
     showMessage('info', '解码功能仅适用于文本工具')
     return
@@ -611,9 +605,9 @@ function handleTextDecode(panel: PanelKey, decodeType: string) {
   try {
     busyPanel.value = panel
     let result = ''
-    if (decodeType === 'base64') {
+    if (decodeType === EncodeType.BASE64) {
       result = decodeBase64(state.source)
-    } else if (decodeType === 'url') {
+    } else if (decodeType === EncodeType.URL) {
       result = decodeURL(state.source)
     }
     previewContent.value = result
@@ -627,14 +621,14 @@ function handleTextDecode(panel: PanelKey, decodeType: string) {
   }
 }
 
-function handleTextTrim(panel: PanelKey, trimType: string) {
+function handleTextTrim(panel: PanelKey, trimType: TrimOption) {
   if (toolType.value !== 'text') {
     showMessage('info', '去除空白功能仅适用于文本工具')
     return
   }
   try {
     busyPanel.value = panel
-    const result = trimWhitespace(state.source, trimType as TrimOption)
+    const result = trimWhitespace(state.source, trimType)
     previewContent.value = result
     showMessage('success', '去除空白成功')
     activeTool.value = `${panel}-trim`
@@ -670,6 +664,307 @@ function handleTextStats(panel: PanelKey) {
   } catch (error) {
     showMessage('error', '统计失败')
   }
+}
+
+function initImageHistory(image: string) {
+  if (toolType.value !== 'image') return
+  imageHistory.value = [image]
+  imageHistoryIndex.value = 0
+}
+
+function saveImageToHistory(image: string) {
+  if (toolType.value !== 'image') return
+  
+  if (imageHistoryIndex.value < imageHistory.value.length - 1) {
+    imageHistory.value = imageHistory.value.slice(0, imageHistoryIndex.value + 1)
+  }
+  
+  imageHistory.value.push(image)
+  imageHistoryIndex.value = imageHistory.value.length - 1
+  
+  if (imageHistory.value.length > IMAGE_CONSTANTS.MAX_HISTORY_SIZE) {
+    const removed = imageHistory.value.shift()
+    if (removed) {
+      imageHistoryIndex.value--
+    }
+  }
+}
+
+function ensureCurrentStateInHistory(panel: PanelKey) {
+  if (toolType.value !== 'image' || !state[panel]?.startsWith('data:image/')) {
+    return
+  }
+  
+  const currentImage = state[panel]
+  
+  if (imageHistory.value.length === 0) {
+    saveImageToHistory(currentImage)
+    return
+  }
+  
+  if (imageHistoryIndex.value >= 0 && imageHistoryIndex.value < imageHistory.value.length) {
+    const currentStateInHistory = imageHistory.value[imageHistoryIndex.value] === currentImage
+    if (currentStateInHistory) {
+      return
+    }
+  }
+  
+  saveImageToHistory(currentImage)
+}
+
+function handleImageUndo(panel: PanelKey) {
+  if (toolType.value !== 'image' || !imageHistory.value || imageHistory.value.length === 0) {
+    showMessage('info', '没有可撤销的操作')
+    return
+  }
+  
+  if (imageHistoryIndex.value <= 0) {
+    showMessage('info', '没有可撤销的操作')
+    return
+  }
+  
+  imageHistoryIndex.value--
+  const previousImage = imageHistory.value[imageHistoryIndex.value]
+  if (previousImage) {
+    state[panel] = previousImage
+    showMessage('success', '已撤销')
+    activeTool.value = `${panel}-undo`
+  } else {
+    showMessage('error', '撤销失败：历史记录无效')
+  }
+}
+
+function handleImageRedo(panel: PanelKey) {
+  if (toolType.value !== 'image' || !imageHistory.value || imageHistory.value.length === 0) {
+    showMessage('info', '没有可重做的操作')
+    return
+  }
+  
+  if (imageHistoryIndex.value >= imageHistory.value.length - 1) {
+    showMessage('info', '没有可重做的操作')
+    return
+  }
+  
+  imageHistoryIndex.value++
+  const nextImage = imageHistory.value[imageHistoryIndex.value]
+  if (nextImage) {
+    state[panel] = nextImage
+    showMessage('success', '已重做')
+    activeTool.value = `${panel}-redo`
+  } else {
+    showMessage('error', '重做失败：历史记录无效')
+  }
+}
+
+async function handleImageCompress(panel: PanelKey, options: { maxSizeMB: number; quality: number; maxWidthOrHeight: number }) {
+  if (toolType.value !== 'image' || !state[panel]?.startsWith('data:image/')) {
+    showMessage('error', '请先导入图片')
+    return
+  }
+  try {
+    busyPanel.value = panel
+    ensureCurrentStateInHistory(panel)
+    const compressed = await compressImage(state[panel], options)
+    state[panel] = compressed
+    saveImageToHistory(compressed)
+    showMessage('success', '图片压缩成功')
+    activeTool.value = `${panel}-compress`
+  } catch (error) {
+    const message = error instanceof Error ? error.message : '压缩失败'
+    showMessage('error', message)
+  } finally {
+    busyPanel.value = null
+  }
+}
+
+async function handleImageResize(panel: PanelKey, options: { width?: number; height?: number; maintainAspectRatio: boolean }) {
+  if (toolType.value !== 'image' || !state[panel]?.startsWith('data:image/')) {
+    showMessage('error', '请先导入图片')
+    return
+  }
+  if (!options.width && !options.height) {
+    showMessage('error', '请指定宽度或高度')
+    return
+  }
+  try {
+    busyPanel.value = panel
+    ensureCurrentStateInHistory(panel)
+    const resized = await resizeImage(state[panel], options)
+    state[panel] = resized
+    saveImageToHistory(resized)
+    showMessage('success', '图片尺寸调整成功')
+    activeTool.value = `${panel}-resize`
+  } catch (error) {
+    const message = error instanceof Error ? error.message : '调整尺寸失败'
+    showMessage('error', message)
+  } finally {
+    busyPanel.value = null
+  }
+}
+
+async function handleImageCrop(panel: PanelKey, options: { x: number; y: number; width: number; height: number }) {
+  if (toolType.value !== 'image' || !state[panel]?.startsWith('data:image/')) {
+    showMessage('error', '请先导入图片')
+    return
+  }
+  if (!options.width || !options.height) {
+    showMessage('error', '请设置裁剪区域')
+    return
+  }
+  try {
+    busyPanel.value = panel
+    ensureCurrentStateInHistory(panel)
+    const cropped = await cropImage(state[panel], options)
+    state[panel] = cropped
+    saveImageToHistory(cropped)
+    showMessage('success', '图片裁剪成功')
+    activeTool.value = `${panel}-crop`
+  } catch (error) {
+    const message = error instanceof Error ? error.message : '裁剪失败'
+    showMessage('error', message)
+  } finally {
+    busyPanel.value = null
+  }
+}
+
+async function handleImageRotate(panel: PanelKey, angle: number) {
+  if (toolType.value !== 'image' || !state[panel]?.startsWith('data:image/')) {
+    showMessage('error', '请先导入图片')
+    return
+  }
+  try {
+    busyPanel.value = panel
+    ensureCurrentStateInHistory(panel)
+    const rotated = await rotateImage(state[panel], angle)
+    state[panel] = rotated
+    saveImageToHistory(rotated)
+    showMessage('success', '图片旋转成功')
+    activeTool.value = `${panel}-rotate`
+  } catch (error) {
+    const message = error instanceof Error ? error.message : '旋转失败'
+    showMessage('error', message)
+  } finally {
+    busyPanel.value = null
+  }
+}
+
+async function handleImageFlip(panel: PanelKey, direction: FlipDirection) {
+  if (toolType.value !== 'image' || !state[panel]?.startsWith('data:image/')) {
+    showMessage('error', '请先导入图片')
+    return
+  }
+  try {
+    busyPanel.value = panel
+    ensureCurrentStateInHistory(panel)
+    const flipped = await flipImage(state[panel], direction)
+    state[panel] = flipped
+    saveImageToHistory(flipped)
+    showMessage('success', '图片翻转成功')
+    activeTool.value = `${panel}-flip`
+  } catch (error) {
+    const message = error instanceof Error ? error.message : '翻转失败'
+    showMessage('error', message)
+  } finally {
+    busyPanel.value = null
+  }
+}
+
+async function handleImageConvert(panel: PanelKey, format: ImageFormat) {
+  if (toolType.value !== 'image' || !state[panel]?.startsWith('data:image/')) {
+    showMessage('error', '请先导入图片')
+    return
+  }
+  try {
+    busyPanel.value = panel
+    ensureCurrentStateInHistory(panel)
+    
+    if (format === ImageFormat.BASE64) {
+      const base64 = await convertImageFormat(state[panel], format)
+      state[panel] = base64
+      showMessage('success', '已转换为 Base64 文本')
+      activeTool.value = `${panel}-convert`
+      return
+    }
+    
+    const converted = await convertImageFormat(state[panel], format)
+    state[panel] = converted
+    saveImageToHistory(converted)
+    showMessage('success', `图片已转换为 ${format.toUpperCase()}`)
+    activeTool.value = `${panel}-convert`
+  } catch (error) {
+    const message = error instanceof Error ? error.message : '格式转换失败'
+    showMessage('error', message)
+  } finally {
+    busyPanel.value = null
+  }
+}
+
+async function handleImageFilter(panel: PanelKey, filter: FilterType) {
+  if (toolType.value !== 'image' || !state[panel]?.startsWith('data:image/')) {
+    showMessage('error', '请先导入图片')
+    return
+  }
+  try {
+    busyPanel.value = panel
+    ensureCurrentStateInHistory(panel)
+    const filtered = await applyFilter(state[panel], filter)
+    state[panel] = filtered
+    saveImageToHistory(filtered)
+    showMessage('success', '滤镜应用成功')
+    activeTool.value = `${panel}-filter`
+  } catch (error) {
+    const message = error instanceof Error ? error.message : '应用滤镜失败'
+    showMessage('error', message)
+  } finally {
+    busyPanel.value = null
+  }
+}
+
+async function handleImageAdjust(panel: PanelKey, options: { brightness: number; contrast: number; saturation: number }) {
+  if (toolType.value !== 'image' || !state[panel]?.startsWith('data:image/')) {
+    showMessage('error', '请先导入图片')
+    return
+  }
+  try {
+    busyPanel.value = panel
+    ensureCurrentStateInHistory(panel)
+    const adjusted = await adjustImage(state[panel], options)
+    state[panel] = adjusted
+    saveImageToHistory(adjusted)
+    showMessage('success', '图片调整成功')
+    activeTool.value = `${panel}-adjust`
+  } catch (error) {
+    const message = error instanceof Error ? error.message : '调整失败'
+    showMessage('error', message)
+  } finally {
+    busyPanel.value = null
+  }
+}
+
+function handleImageDownload(panel: PanelKey) {
+  if (toolType.value !== 'image' || !state[panel]?.startsWith('data:image/')) {
+    showMessage('error', '请先导入图片')
+    return
+  }
+  try {
+    const link = document.createElement('a')
+    link.href = state[panel]
+    const match = state[panel].match(/data:image\/([^;]+);/)
+    const format = match ? match[1] : 'png'
+    link.download = `image-${Date.now()}.${format}`
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    showMessage('success', '图片下载成功')
+    activeTool.value = `${panel}-download`
+  } catch (error) {
+    const message = error instanceof Error ? error.message : '下载失败'
+    showMessage('error', message)
+  }
+}
+
+function handleImageInfo(info: { width: number; height: number } | null) {
+  currentImageInfo.value = info
 }
 
 function handleSave(panel: PanelKey) {
@@ -863,7 +1158,10 @@ function handleImport(panel: PanelKey, event: Event) {
   if (toolType.value === 'image' && file.type.startsWith('image/')) {
     const reader = new FileReader()
     reader.onload = () => {
-      state[panel] = String(reader.result ?? '')
+      const imageData = String(reader.result ?? '')
+      state[panel] = imageData
+      // 重置历史记录并添加初始图片
+      initImageHistory(imageData)
       showMessage('success', `${file.name} 已加载到${panel === 'source' ? '源' : '目标'}面板`)
       input.value = ''
       activeTool.value = `${panel}-import`
@@ -1016,24 +1314,124 @@ function handleToggleAutoFormat() {
   showMessage('success', autoFormat.value ? '已启用自动格式化' : '已禁用自动格式化')
 }
 
+function handleAction(payload: ToolActionPayload) {
+  switch (payload.action) {
+    case 'triggerImport':
+      if (payload.panel) triggerImport(payload.panel)
+      break
+    case 'save':
+      if (payload.panel) handleSave(payload.panel)
+      break
+    case 'export':
+      if (payload.panel) handleExport(payload.panel)
+      break
+    case 'format':
+      if (payload.panel) handleFormat(payload.panel)
+      break
+    case 'minify':
+      if (payload.panel) handleMinify(payload.panel)
+      break
+    case 'repair':
+      if (payload.panel) handleRepair(payload.panel)
+      break
+    case 'clear':
+      if (payload.panel) handleClear(payload.panel)
+      break
+    case 'toggleAutoFormat':
+      handleToggleAutoFormat()
+      break
+    case 'toggleDeepParse':
+      handleToggleDeepParse()
+      break
+    case 'case':
+      if (payload.panel && 'params' in payload && payload.params) {
+        handleTextCase(payload.panel, payload.params.caseType as CaseType)
+      }
+      break
+    case 'encode':
+      if (payload.panel && 'params' in payload && payload.params) {
+        handleTextEncode(payload.panel, payload.params.encodeType as EncodeType)
+      }
+      break
+    case 'decode':
+      if (payload.panel && 'params' in payload && payload.params) {
+        handleTextDecode(payload.panel, payload.params.decodeType as EncodeType)
+      }
+      break
+    case 'trim':
+      if (payload.panel && 'params' in payload && payload.params) {
+        handleTextTrim(payload.panel, payload.params.trimType as TrimOption)
+      }
+      break
+    case 'stats':
+      if (payload.panel) handleTextStats(payload.panel)
+      break
+    case 'compress':
+      if (payload.panel && 'params' in payload && payload.params) {
+        handleImageCompress(payload.panel, payload.params)
+      }
+      break
+    case 'resize':
+      if (payload.panel && 'params' in payload && payload.params) {
+        handleImageResize(payload.panel, payload.params)
+      }
+      break
+    case 'crop':
+      if (payload.panel && 'params' in payload && payload.params) {
+        handleImageCrop(payload.panel, payload.params)
+      }
+      break
+    case 'rotate':
+      if (payload.panel && 'params' in payload && payload.params) {
+        handleImageRotate(payload.panel, payload.params.angle)
+      }
+      break
+    case 'flip':
+      if (payload.panel && 'params' in payload && payload.params) {
+        handleImageFlip(payload.panel, payload.params.direction as FlipDirection)
+      }
+      break
+    case 'convert':
+      if (payload.panel && 'params' in payload && payload.params) {
+        handleImageConvert(payload.panel, payload.params.format as ImageFormat)
+      }
+      break
+    case 'filter':
+      if (payload.panel && 'params' in payload && payload.params) {
+        handleImageFilter(payload.panel, payload.params.filter as FilterType)
+      }
+      break
+    case 'adjust':
+      if (payload.panel && 'params' in payload && payload.params) {
+        handleImageAdjust(payload.panel, payload.params)
+      }
+      break
+    case 'download':
+      if (payload.panel) handleImageDownload(payload.panel)
+      break
+    case 'undo':
+      if (payload.panel) handleImageUndo(payload.panel)
+      break
+    case 'redo':
+      if (payload.panel) handleImageRedo(payload.panel)
+      break
+  }
+}
+
 /**
  * 深度解析 JSON 对象，递归解析所有字符串值中的 JSON
  */
-function deepParseJson(obj: any): any {
+function deepParseJson(obj: unknown): unknown {
   if (typeof obj === 'string') {
-    // 尝试解析字符串中的 JSON
     const trimmed = obj.trim()
-    // 检查是否看起来像 JSON（以 { 或 [ 开头）
     if (
       (trimmed.startsWith('{') && trimmed.endsWith('}')) ||
       (trimmed.startsWith('[') && trimmed.endsWith(']'))
     ) {
       try {
         const parsed = JSON.parse(trimmed)
-        // 如果解析成功，递归处理解析后的对象
         return deepParseJson(parsed)
       } catch {
-        // 解析失败，返回原字符串
         return obj
       }
     }
@@ -1045,10 +1443,10 @@ function deepParseJson(obj: any): any {
   }
 
   if (obj !== null && typeof obj === 'object') {
-    const result: any = {}
+    const result: Record<string, unknown> = {}
     for (const key in obj) {
       if (Object.prototype.hasOwnProperty.call(obj, key)) {
-        result[key] = deepParseJson(obj[key])
+        result[key] = deepParseJson((obj as Record<string, unknown>)[key])
       }
     }
     return result
@@ -1066,21 +1464,11 @@ function deepParseJson(obj: any): any {
       :active-tool="activeTool"
       :auto-format="autoFormat"
       :deep-parse="deepParse"
-      @trigger-import="triggerImport"
-      @save="handleSave"
-      @export="handleExport"
-      @format="handleFormat"
-      @minify="handleMinify"
-      @repair="handleRepair"
-      @clear="handleClear"
-      @toggle-auto-format="handleToggleAutoFormat"
-      @toggle-deep-parse="handleToggleDeepParse"
+      :image-info="currentImageInfo"
+      :can-undo="toolType === 'image' && imageHistory && imageHistoryIndex > 0"
+      :can-redo="toolType === 'image' && imageHistory && imageHistoryIndex < imageHistory.length - 1"
+      @action="handleAction"
       @update:tool-type="toolType = $event"
-      @text-case="handleTextCase"
-      @text-encode="handleTextEncode"
-      @text-decode="handleTextDecode"
-      @text-trim="handleTextTrim"
-      @text-stats="handleTextStats"
     />
 
     <div class="main-layout">
@@ -1096,7 +1484,6 @@ function deepParseJson(obj: any): any {
       />
 
       <section class="workspace" :class="{ 'is-diff': mode === 'diff' && toolType === 'json' }">
-        <!-- JSON 工具 -->
         <template v-if="toolType === 'json'">
           <JsonWorkspace
             v-if="mode === 'format'"
@@ -1121,7 +1508,6 @@ function deepParseJson(obj: any): any {
           />
         </template>
 
-        <!-- 文本工具 -->
         <TextWorkspace
           v-else-if="toolType === 'text'"
           :source="state.source"
@@ -1134,12 +1520,13 @@ function deepParseJson(obj: any): any {
           @editor-mounted="sourceEditorInstance = $event"
         />
 
-        <!-- 图片工具 -->
         <ImageWorkspace
           v-else-if="toolType === 'image'"
+          ref="imageWorkspaceRef"
           :source="state.source"
           :preview-content="previewContent"
           @update:source="state.source = $event"
+          @image-info="handleImageInfo"
         />
       </section>
     </div>

@@ -1,4 +1,4 @@
-const SIZE_UNITS = ['B', 'KB', 'MB', 'GB', 'TB']
+import { SIZE_UNITS } from '@/constants'
 
 export function formatByteSize(bytes: number): string {
   if (!Number.isFinite(bytes) || bytes <= 0) {
@@ -38,45 +38,33 @@ export function parseJsonError(error: unknown, source: string): JsonParseError |
   const errorMessage = error.message
   const lines = source.split('\n')
   
-  // 尝试从错误消息中提取位置信息
-  // JSON.parse 的错误消息格式通常是: "Unexpected token X in JSON at position Y"
   const positionMatch = errorMessage.match(/position\s+(\d+)/i)
   if (positionMatch && positionMatch[1]) {
     let position = parseInt(positionMatch[1], 10)
     
-    // 对于某些错误，JSON.parse 报告的位置可能是错误字符后面的位置
-    // 我们需要向前查找实际的错误字符（如多余的逗号、括号等）
     if (position >= 0 && position < source.length) {
       const charAtPos = source[position]
       const charBeforePos = position > 0 ? source[position - 1] : ''
       
-      // 如果错误消息提到 } 或 ]，且前一个字符是逗号，错误应该在逗号处
       if (charAtPos && (charAtPos === '}' || charAtPos === ']') && charBeforePos === ',') {
         position = position - 1
-      }
-      // 如果错误消息提到 } 或 ]，向前查找逗号（包括跨行查找）
-      else if (charAtPos && (charAtPos === '}' || charAtPos === ']')) {
+      } else if (charAtPos && (charAtPos === '}' || charAtPos === ']')) {
         let searchPos = position - 1
-        // 向前查找，跳过所有空白字符（包括空格、制表符、换行符等）
         while (searchPos >= 0) {
           const char = source[searchPos]
           if (char === undefined) {
             break
           }
-          // 如果找到逗号，错误应该在逗号处
           if (char === ',') {
             position = searchPos
             break
           }
-          // 如果遇到非空白字符但不是逗号，停止查找
           if (!/\s/.test(char)) {
             break
           }
           searchPos--
         }
-      }
-      // 如果当前位置是空白字符，向前查找非空白字符
-      else if (charAtPos && /\s/.test(charAtPos)) {
+      } else if (charAtPos && /\s/.test(charAtPos)) {
         let searchPos = position - 1
         while (searchPos >= 0) {
           const char = source[searchPos]
@@ -87,7 +75,6 @@ export function parseJsonError(error: unknown, source: string): JsonParseError |
         }
         if (searchPos >= 0) {
           const char = source[searchPos]
-          // 如果找到的是逗号，可能是多余的逗号
           if (char === ',') {
             position = searchPos
           }
@@ -95,7 +82,6 @@ export function parseJsonError(error: unknown, source: string): JsonParseError |
       }
     }
     
-    // 计算行号和列号
     let currentPos = 0
     let line = 1
     let column = 1
@@ -107,8 +93,6 @@ export function parseJsonError(error: unknown, source: string): JsonParseError |
       const lineStart = currentPos
       const lineEnd = currentPos + lineLength
       
-      // 检查错误位置是否在当前行内
-      // 注意：position 应该在 [lineStart, lineEnd) 范围内（不包括换行符）
       if (position >= lineStart && position < lineEnd) {
         line = i + 1
         column = position - lineStart + 1
@@ -116,7 +100,6 @@ export function parseJsonError(error: unknown, source: string): JsonParseError |
         break
       }
       
-      // 如果位置正好在行尾（换行符位置），也属于当前行
       if (position === lineEnd) {
         line = i + 1
         column = lineLength + 1
@@ -124,11 +107,9 @@ export function parseJsonError(error: unknown, source: string): JsonParseError |
         break
       }
       
-      // 移动到下一行（当前行长度 + 换行符）
       currentPos += lineLength + 1
     }
     
-    // 如果错误位置超出所有行，指向最后一行
     if (!found && position >= currentPos) {
       const lastLineIndex = lines.length - 1
       if (lastLineIndex >= 0) {
@@ -138,7 +119,6 @@ export function parseJsonError(error: unknown, source: string): JsonParseError |
       }
     }
     
-    // 如果仍然没找到，使用更宽松的查找
     if (!found) {
       currentPos = 0
       for (let i = 0; i < lines.length; i++) {
@@ -157,16 +137,13 @@ export function parseJsonError(error: unknown, source: string): JsonParseError |
       }
     }
     
-    // 获取错误位置的字符
     const errorChar = position < source.length ? source[position] : ''
     
-    // 清理错误消息，使其更友好
     let friendlyMessage = errorMessage
       .replace(/JSON\.parse:/gi, '')
       .replace(/at position \d+/gi, '')
       .trim()
     
-    // 常见错误类型的友好提示
     if (errorMessage.includes('Unexpected end')) {
       friendlyMessage = 'JSON 字符串意外结束，可能缺少闭合括号或引号'
     } else if (errorMessage.includes('Unexpected token')) {
@@ -191,7 +168,6 @@ export function parseJsonError(error: unknown, source: string): JsonParseError |
     }
   }
   
-  // 如果无法提取位置，尝试从消息中提取行号
   const lineMatch = errorMessage.match(/line\s+(\d+)/i)
   if (lineMatch && lineMatch[1]) {
     const line = parseInt(lineMatch[1], 10)

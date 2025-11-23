@@ -1,45 +1,35 @@
-/**
- * 文本处理工具函数
- */
+import { CaseType, TrimOption, EncodeType } from '@/types/enums'
 
-/**
- * 大小写转换类型
- */
-export type CaseType = 'upper' | 'lower' | 'title' | 'camel' | 'pascal' | 'snake' | 'kebab'
-
-/**
- * 大小写转换
- */
 export function convertCase(text: string, caseType: CaseType): string {
   if (!text) return text
 
   switch (caseType) {
-    case 'upper':
+    case CaseType.UPPER:
       return text.toUpperCase()
-    case 'lower':
+    case CaseType.LOWER:
       return text.toLowerCase()
-    case 'title':
+    case CaseType.TITLE:
       return text.replace(/\w\S*/g, (txt) => {
         return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase()
       })
-    case 'camel':
+    case CaseType.CAMEL:
       return text
         .replace(/\s+(.)/g, (_, char) => char.toUpperCase())
         .replace(/\s+/g, '')
         .replace(/^(.)/, (_, char) => char.toLowerCase())
-    case 'pascal':
+    case CaseType.PASCAL:
       return text
         .replace(/\s+(.)/g, (_, char) => char.toUpperCase())
         .replace(/\s+/g, '')
         .replace(/^(.)/, (_, char) => char.toUpperCase())
-    case 'snake':
+    case CaseType.SNAKE:
       return text
         .replace(/\W+/g, ' ')
         .split(/\s+/)
         .map((word) => word.toLowerCase())
         .filter((word) => word.length > 0)
         .join('_')
-    case 'kebab':
+    case CaseType.KEBAB:
       return text
         .replace(/\W+/g, ' ')
         .split(/\s+/)
@@ -51,83 +41,60 @@ export function convertCase(text: string, caseType: CaseType): string {
   }
 }
 
-/**
- * Base64 编码
- */
 export function encodeBase64(text: string): string {
   try {
     return btoa(unescape(encodeURIComponent(text)))
-  } catch (error) {
+  } catch {
     throw new Error('Base64 编码失败')
   }
 }
 
-/**
- * Base64 解码
- */
 export function decodeBase64(text: string): string {
   try {
     return decodeURIComponent(escape(atob(text)))
-  } catch (error) {
+  } catch {
     throw new Error('Base64 解码失败，请检查输入是否为有效的 Base64 字符串')
   }
 }
 
-/**
- * URL 编码
- */
 export function encodeURL(text: string): string {
   try {
     return encodeURIComponent(text)
-  } catch (error) {
+  } catch {
     throw new Error('URL 编码失败')
   }
 }
 
-/**
- * URL 解码
- */
 export function decodeURL(text: string): string {
   try {
     return decodeURIComponent(text)
-  } catch (error) {
+  } catch {
     throw new Error('URL 解码失败，请检查输入是否为有效的 URL 编码字符串')
   }
 }
 
-/**
- * 去除空白选项
- */
-export type TrimOption = 'all' | 'leading' | 'trailing' | 'lines' | 'emptyLines'
-
-/**
- * 去除空白
- */
 export function trimWhitespace(text: string, option: TrimOption): string {
   if (!text) return text
 
   switch (option) {
-    case 'all':
+    case TrimOption.ALL:
       return text.replace(/\s+/g, '')
-    case 'leading':
+    case TrimOption.LEADING:
       return text.replace(/^\s+/gm, '')
-    case 'trailing':
+    case TrimOption.TRAILING:
       return text.replace(/\s+$/gm, '')
-    case 'lines':
+    case TrimOption.LINES:
       return text
         .split('\n')
         .map((line) => line.trim())
         .join('\n')
-    case 'emptyLines':
+    case TrimOption.EMPTY_LINES:
       return text.replace(/^\s*[\r\n]/gm, '')
     default:
       return text.trim()
   }
 }
 
-/**
- * 文本统计信息
- */
 export interface TextStats {
   characters: number
   charactersNoSpaces: number
@@ -137,9 +104,6 @@ export interface TextStats {
   bytes: number
 }
 
-/**
- * 统计文本信息
- */
 export function getTextStats(text: string): TextStats {
   const characters = text.length
   const charactersNoSpaces = text.replace(/\s/g, '').length
@@ -163,4 +127,6 @@ export function getTextStats(text: string): TextStats {
     bytes
   }
 }
+
+export type { CaseType, TrimOption, EncodeType }
 

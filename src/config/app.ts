@@ -1,26 +1,17 @@
-/**
- * 应用配置
- */
-export type ToolType = 'text' | 'image' | 'json'
+import { STORAGE_CONSTANTS } from '@/constants'
+import type { ToolType } from '@/types/jsonTools'
 
 export interface AppConfig {
-  /** 默认工具类型 */
   defaultTool: ToolType
 }
 
-/**
- * 默认配置
- */
 export const defaultConfig: AppConfig = {
   defaultTool: 'json'
 }
 
-/**
- * 从 localStorage 读取配置
- */
 export function loadConfig(): AppConfig {
   try {
-    const stored = localStorage.getItem('byte-tools-config')
+    const stored = localStorage.getItem(STORAGE_CONSTANTS.CONFIG_KEY)
     if (stored) {
       const parsed = JSON.parse(stored)
       return {
@@ -28,15 +19,12 @@ export function loadConfig(): AppConfig {
         ...parsed
       }
     }
-  } catch (error) {
-    console.warn('无法读取配置:', error)
+  } catch {
+    // 配置读取失败，使用默认配置
   }
   return defaultConfig
 }
 
-/**
- * 保存配置到 localStorage
- */
 export function saveConfig(config: Partial<AppConfig>): void {
   try {
     const current = loadConfig()
@@ -44,18 +32,13 @@ export function saveConfig(config: Partial<AppConfig>): void {
       ...current,
       ...config
     }
-    localStorage.setItem('byte-tools-config', JSON.stringify(updated))
-  } catch (error) {
-    console.warn('无法保存配置:', error)
+    localStorage.setItem(STORAGE_CONSTANTS.CONFIG_KEY, JSON.stringify(updated))
+  } catch {
+    // 配置保存失败，静默处理
   }
 }
 
-/**
- * 获取当前配置
- */
 export function getConfig(): AppConfig {
   return loadConfig()
 }
-
-
 
