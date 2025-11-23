@@ -59,7 +59,7 @@ export function getSidebarActions(toolType: ToolType, mode: 'format' | 'diff'): 
   // 关于工具
   utilityGroup.push({
     key: 'about',
-    icon: 'info',
+    icon: 'about',
     title: '关于工具',
     visible: () => true,
     emit: 'openAbout'

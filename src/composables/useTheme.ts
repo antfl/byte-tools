@@ -1,13 +1,31 @@
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import type { ThemeMode } from '../types/jsonTools'
 import { STORAGE_CONSTANTS } from '@/constants'
 
-const theme = ref<ThemeMode>('dark')
+const theme = ref<ThemeMode>('system')
+const systemTheme = ref<'light' | 'dark'>('dark')
 
 let initialized = false
 let watching = false
+let mediaQuery: MediaQueryList | null = null
 
-function applyTheme(mode: ThemeMode) {
+function getSystemTheme(): 'light' | 'dark' {
+  if (typeof window === 'undefined') {
+    return 'dark'
+  }
+  return window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches
+    ? 'light'
+    : 'dark'
+}
+
+function getEffectiveTheme(): 'light' | 'dark' {
+  if (theme.value === 'system') {
+    return systemTheme.value
+  }
+  return theme.value
+}
+
+function applyTheme(mode: 'light' | 'dark') {
   document.documentElement.dataset.theme = mode
 }
 
@@ -21,14 +39,30 @@ function initTheme() {
     return
   }
 
+  // 初始化系统主题
+  systemTheme.value = getSystemTheme()
+
+  // 从存储中读取主题设置
   const storedTheme = window.localStorage.getItem(STORAGE_CONSTANTS.THEME_KEY)
-  if (storedTheme === 'dark' || storedTheme === 'light') {
-    theme.value = storedTheme
-  } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
-    theme.value = 'light'
+  if (storedTheme === 'dark' || storedTheme === 'light' || storedTheme === 'system') {
+    theme.value = storedTheme as ThemeMode
   }
 
-  applyTheme(theme.value)
+  // 应用主题
+  applyTheme(getEffectiveTheme())
+
+  // 监听系统主题变化
+  if (window.matchMedia) {
+    mediaQuery = window.matchMedia('(prefers-color-scheme: light)')
+    mediaQuery.addEventListener('change', handleSystemThemeChange)
+  }
+}
+
+function handleSystemThemeChange() {
+  systemTheme.value = getSystemTheme()
+  if (theme.value === 'system') {
+    applyTheme(systemTheme.value)
+  }
 }
 
 function setupWatcher() {
@@ -37,11 +71,11 @@ function setupWatcher() {
   }
   watching = true
   watch(
-    theme,
-    (mode) => {
-      applyTheme(mode)
+    [theme, systemTheme],
+    () => {
+      applyTheme(getEffectiveTheme())
       if (typeof window !== 'undefined') {
-        window.localStorage.setItem(STORAGE_CONSTANTS.THEME_KEY, mode)
+        window.localStorage.setItem(STORAGE_CONSTANTS.THEME_KEY, theme.value)
       }
     },
     { immediate: true }
@@ -54,24 +88,35 @@ export function useTheme() {
     setupWatcher()
   })
 
+  onUnmounted(() => {
+    if (mediaQuery) {
+      mediaQuery.removeEventListener('change', handleSystemThemeChange)
+    }
+  })
+
   if (typeof window !== 'undefined') {
     initTheme()
     setupWatcher()
   }
 
-  const isDarkTheme = computed(() => theme.value === 'dark')
-  const themeToggleTitle = computed(() =>
-    theme.value === 'dark' ? '切换到浅色主题' : '切换到暗色主题'
-  )
+  const effectiveTheme = computed(() => getEffectiveTheme())
+  const isDarkTheme = computed(() => effectiveTheme.value === 'dark')
+  const themeToggleTitle = computed(() => {
+    if (theme.value === 'system') {
+      return '主题设置'
+    }
+    return theme.value === 'dark' ? '切换到浅色主题' : '切换到暗色主题'
+  })
 
-  function toggleTheme() {
-    theme.value = theme.value === 'dark' ? 'light' : 'dark'
+  function setTheme(mode: ThemeMode) {
+    theme.value = mode
   }
 
   return {
     theme,
+    effectiveTheme,
     isDarkTheme,
-    toggleTheme,
+    setTheme,
     themeToggleTitle
   }
 }

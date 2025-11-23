@@ -101,7 +101,8 @@ export type PanelKey = typeof PanelKey[keyof typeof PanelKey]
  */
 export const ThemeMode = {
   DARK: 'dark',
-  LIGHT: 'light'
+  LIGHT: 'light',
+  SYSTEM: 'system'
 } as const
 
 export type ThemeMode = typeof ThemeMode[keyof typeof ThemeMode]

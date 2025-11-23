@@ -33,7 +33,9 @@ import {
   Sparkles,
   Layers,
   Undo2,
-  Redo2
+  Redo2,
+  ExternalLink,
+  Monitor
 } from 'lucide-vue-next'
 
 export type IconName =
@@ -57,6 +59,7 @@ export type IconName =
   | 'convert'
   | 'filter'
   | 'info'
+  | 'about'
   | 'download'
   | 'undo'
   | 'redo'
@@ -68,6 +71,7 @@ export type IconName =
   | 'diff'
   | 'auto'
   | 'deep'
+  | 'monitor'
 
 export const iconMap: Record<IconName, Component> = {
   import: Upload,
@@ -90,6 +94,7 @@ export const iconMap: Record<IconName, Component> = {
   convert: RefreshCw,
   filter: Filter,
   info: Info,
+  about: ExternalLink,
   download: Download,
   undo: Undo2,
   redo: Redo2,
@@ -100,6 +105,7 @@ export const iconMap: Record<IconName, Component> = {
   storage: HardDrive,
   diff: GitCompare,
   auto: Sparkles,
-  deep: Layers
+  deep: Layers,
+  monitor: Monitor
 }
 

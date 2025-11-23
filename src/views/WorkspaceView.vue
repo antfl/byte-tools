@@ -44,9 +44,9 @@ import { IMAGE_CONSTANTS, STORAGE_CONSTANTS, EDITOR_CONSTANTS } from '@/constant
 import { ImageFormat, FilterType, FlipDirection, CaseType, TrimOption, EncodeType } from '@/types/enums'
 import type { ToolActionPayload } from '@/types/actions'
 
-const { theme, themeToggleTitle, isDarkTheme, toggleTheme } = useTheme()
+const { effectiveTheme } = useTheme()
 
-const editorTheme = computed(() => `byte-tools-${theme.value}`)
+const editorTheme = computed(() => `byte-tools-${effectiveTheme.value}`)
 const differ = createDiffer({
   arrays: { detectMove: false, includeValueOnMove: false }
 })
@@ -329,9 +329,7 @@ watch(editorTheme, (themeName) => {
 })
 
 onMounted(() => {
-  const storedTheme = localStorage.getItem(STORAGE_CONSTANTS.THEME_KEY)
-  const currentTheme = storedTheme === 'dark' || storedTheme === 'light' ? storedTheme : theme.value
-  monaco.editor.setTheme(`byte-tools-${currentTheme}`)
+  monaco.editor.setTheme(`byte-tools-${effectiveTheme.value}`)
 })
 
 watch(
@@ -1475,10 +1473,7 @@ function deepParseJson(obj: unknown): unknown {
       <SideToolbar
         :tool-type="toolType"
         :mode="mode"
-        :theme-toggle-title="themeToggleTitle"
-        :is-dark-theme="isDarkTheme"
         @update:mode="mode = $event"
-        @toggleTheme="toggleTheme"
         @open-cache-manager="handleOpenCacheManager"
         @open-about="handleOpenAbout"
       />
